@@ -1,0 +1,72 @@
+name: time_lobao
+description: Plataforma completa para Personal Trainers e Alunos
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Gerenciamento de Estado
+  flutter_riverpod: ^3.3.1
+  #riverpod_annotation: ^4.0.2
+
+  # Navegação
+  go_router: ^17.2.3
+
+  # Backend (Firebase)
+  firebase_core: ^4.7.0
+  firebase_auth: ^6.4.0
+  cloud_firestore: ^6.3.0
+  firebase_storage: ^13.3.0
+
+  # UI/UX
+  google_fonts: ^8.1.0
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.0
+  shimmer: ^3.0.0
+  lottie: ^3.3.3
+
+  # Funcionalidades
+  intl: ^0.20.2
+  uuid: ^4.2.2
+  image_picker: ^1.0.5
+  video_player: ^2.8.1
+  chewie: ^1.7.4
+  
+  # Formulários e Validação
+  flutter_form_builder: ^10.3.0+2
+  form_builder_validators: ^11.3.0
+
+  # Utilitários
+  shared_preferences: ^2.2.2
+  connectivity_plus: ^7.1.1
+  permission_handler: ^12.0.1
+  flutter_launcher_icons: ^0.14.4
+
+  # Ícones
+  cupertino_icons: ^1.0.6
+  font_awesome_flutter: ^11.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^4.0.3
+  build_runner: ^2.4.7
+  riverpod_lint: ^3.1.3
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - lib/assets/images/
+    - lib/assets/icons/
+    - lib/assets/animations/
+
+#  fonts:
+#    - family: Bebas
+#      fonts:
+#        - asset: lib/assets/fonts/BebasNeue-Regular.ttf

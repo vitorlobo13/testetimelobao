@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../trainer/domain/entities/student_entity.dart';
+import '../../domain/entities/diet_entity.dart';
 import '../../domain/entities/meal_entity.dart';
 import '../providers/diet_provider.dart';
 import '../widgets/meal_card.dart';
@@ -15,10 +15,12 @@ import '../widgets/macros_chart.dart';
 /// Tela de criação de dieta (Professor)
 class CreateDietPage extends ConsumerStatefulWidget {
   final StudentEntity student;
+  final DietEntity? initialDiet;
 
   const CreateDietPage({
     super.key,
     required this.student,
+    this.initialDiet,
   });
 
   @override
@@ -35,14 +37,25 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
   final _targetFatsController = TextEditingController();
 
   bool _isSaving = false;
-  int? _selectedMealIndex;
 
   @override
   void initState() {
     super.initState();
-    // Reseta o construtor ao entrar
+    if (widget.initialDiet != null) {
+      _dietNameController.text = widget.initialDiet!.name;
+      _dietDescriptionController.text = widget.initialDiet!.description ?? '';
+      _targetCaloriesController.text = widget.initialDiet!.targetCalories?.toStringAsFixed(0) ?? '';
+      _targetProteinController.text = widget.initialDiet!.targetProtein?.toStringAsFixed(0) ?? '';
+      _targetCarbsController.text = widget.initialDiet!.targetCarbs?.toStringAsFixed(0) ?? '';
+      _targetFatsController.text = widget.initialDiet!.targetFats?.toStringAsFixed(0) ?? '';
+    }
+    // Reseta/inicializa o construtor ao entrar
     Future.microtask(() {
-      ref.read(dietProvider.notifier).startDietBuilder();
+      if (widget.initialDiet != null) {
+        ref.read(dietProvider.notifier).startDietBuilderFrom(widget.initialDiet!);
+      } else {
+        ref.read(dietProvider.notifier).startDietBuilder();
+      }
     });
   }
 

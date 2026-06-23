@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../domain/entities/diet_entity.dart';
+import '../../domain/entities/meal_entity.dart';
 import '../providers/diet_provider.dart';
 import '../widgets/meal_card.dart';
 import '../widgets/food_item_card.dart';
@@ -30,7 +32,7 @@ class _DietViewPageState extends ConsumerState<DietViewPage> {
     });
   }
 
-  void _showMealDetails(meal) {
+  void _showMealDetails(MealEntity meal) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -176,7 +178,7 @@ class _DietViewPageState extends ConsumerState<DietViewPage> {
     );
   }
 
-  Widget _buildDietInfo(diet) {
+  Widget _buildDietInfo(DietEntity diet) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -192,7 +194,7 @@ class _DietViewPageState extends ConsumerState<DietViewPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.2),
+                  color: AppColors.success.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(

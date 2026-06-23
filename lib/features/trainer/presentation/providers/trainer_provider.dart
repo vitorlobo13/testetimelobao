@@ -94,6 +94,37 @@ class TrainerDashboardNotifier extends Notifier<TrainerDashboardState> {
     await loadDashboardData();
   }
 
+  /// Adiciona um novo aluno
+  void addStudent(StudentEntity newStudent) {
+    final updatedList = [newStudent, ...state.students];
+    _recalculateTotals(updatedList);
+  }
+
+  /// Atualiza os dados de um aluno
+  void updateStudent(StudentEntity updatedStudent) {
+    final updatedList = state.students.map((s) => s.id == updatedStudent.id ? updatedStudent : s).toList();
+    _recalculateTotals(updatedList);
+  }
+
+  void _recalculateTotals(List<StudentEntity> list) {
+    final activeCount = list.where((s) => s.isActive).length;
+    final pendingCount = list
+        .where((s) => s.paymentStatus == PaymentStatus.pending || 
+                    s.paymentStatus == PaymentStatus.overdue)
+        .length;
+    final revenue = list
+        .where((s) => s.isActive && s.monthlyFee != null)
+        .fold(0.0, (sum, s) => sum + s.monthlyFee!);
+
+    state = state.copyWith(
+      students: list,
+      totalStudents: list.length,
+      activeStudents: activeCount,
+      pendingPayments: pendingCount,
+      monthlyRevenue: revenue,
+    );
+  }
+
   /// Gera alunos mockados para demonstração
   List<StudentEntity> _generateMockStudents() {
     return [
@@ -196,6 +227,86 @@ class TrainerDashboardNotifier extends Notifier<TrainerDashboardState> {
         paymentStatus: PaymentStatus.overdue,
         lastWorkoutDate: DateTime.now().subtract(const Duration(days: 20)),
         totalWorkouts: 18,
+      ),
+      StudentEntity(
+        id: '6',
+        trainerId: 'trainer_123',
+        name: 'Mariana Lima',
+        email: 'mariana@email.com',
+        phone: '(11) 95555-4444',
+        enrollmentDate: DateTime.now().subtract(const Duration(days: 75)),
+        isActive: true,
+        status: StudentStatus.active,
+        weight: 65.2,
+        height: 168,
+        age: 27,
+        gender: Gender.female,
+        planType: 'Premium',
+        monthlyFee: 250.00,
+        nextPaymentDate: DateTime.now().add(const Duration(days: 10)),
+        paymentStatus: PaymentStatus.paid,
+        lastWorkoutDate: DateTime.now().subtract(const Duration(days: 3)),
+        totalWorkouts: 32,
+      ),
+      StudentEntity(
+        id: '7',
+        trainerId: 'trainer_123',
+        name: 'Bruno Souza',
+        email: 'bruno@email.com',
+        phone: '(11) 94444-3333',
+        enrollmentDate: DateTime.now().subtract(const Duration(days: 15)),
+        isActive: true,
+        status: StudentStatus.active,
+        weight: 80.0,
+        height: 180,
+        age: 22,
+        gender: Gender.male,
+        planType: 'Básico',
+        monthlyFee: 150.00,
+        nextPaymentDate: DateTime.now().add(const Duration(days: 15)),
+        paymentStatus: PaymentStatus.paid,
+        lastWorkoutDate: DateTime.now().subtract(const Duration(days: 4)),
+        totalWorkouts: 8,
+      ),
+      StudentEntity(
+        id: '8',
+        trainerId: 'trainer_123',
+        name: 'Amanda Rocha',
+        email: 'amanda@email.com',
+        phone: '(11) 93333-2222',
+        enrollmentDate: DateTime.now().subtract(const Duration(days: 110)),
+        isActive: true,
+        status: StudentStatus.active,
+        weight: 59.0,
+        height: 163,
+        age: 30,
+        gender: Gender.female,
+        planType: 'Premium',
+        monthlyFee: 250.00,
+        nextPaymentDate: DateTime.now().add(const Duration(days: 2)),
+        paymentStatus: PaymentStatus.paid,
+        lastWorkoutDate: DateTime.now().subtract(const Duration(days: 1)),
+        totalWorkouts: 50,
+      ),
+      StudentEntity(
+        id: '9',
+        trainerId: 'trainer_123',
+        name: 'Lucas Ferreira',
+        email: 'lucas@email.com',
+        phone: '(11) 92222-1111',
+        enrollmentDate: DateTime.now().subtract(const Duration(days: 50)),
+        isActive: true,
+        status: StudentStatus.active,
+        weight: 88.0,
+        height: 176,
+        age: 26,
+        gender: Gender.male,
+        planType: 'Básico',
+        monthlyFee: 150.00,
+        nextPaymentDate: DateTime.now().subtract(const Duration(days: 1)),
+        paymentStatus: PaymentStatus.pending,
+        lastWorkoutDate: DateTime.now().subtract(const Duration(days: 2)),
+        totalWorkouts: 21,
       ),
     ];
   }

@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/workout_entity.dart';
@@ -187,6 +188,20 @@ class WorkoutBuilderNotifier extends Notifier<WorkoutBuilderState> {
     state = state.copyWith(divisions: updatedDivisions);
   }
 
+  /// Carrega o construtor a partir de divisões e dados de um modelo existente
+  void loadFromTemplate({
+    required String name,
+    required String? description,
+    required List<WorkoutDivision> divisions,
+  }) {
+    state = WorkoutBuilderState(
+      workoutName: name,
+      workoutDescription: description,
+      divisions: divisions,
+      currentDivisionIndex: 0,
+    );
+  }
+
   /// Reseta o construtor
   void reset() {
     state = const WorkoutBuilderState();
@@ -212,7 +227,7 @@ class WorkoutBuilderNotifier extends Notifier<WorkoutBuilderState> {
         isActive: true,
       );
 
-      print('Treino salvo: ${workout.name}');
+      developer.log('Treino salvo: ${workout.name}');
       return true;
     } catch (e) {
       return false;

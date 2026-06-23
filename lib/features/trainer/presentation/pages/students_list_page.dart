@@ -6,6 +6,7 @@ import '../../domain/entities/student_entity.dart';
 import '../providers/trainer_provider.dart';
 import '../widgets/student_card.dart';
 import 'student_detail_page.dart';
+import 'add_student_page.dart';
 
 
 
@@ -223,8 +224,10 @@ class _StudentsListPageState extends ConsumerState<StudentsListPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Adicionar novo aluno')),
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const AddStudentPage(),
+            ),
           );
         },
         backgroundColor: AppColors.teal,
@@ -318,7 +321,7 @@ class _StudentsListPageState extends ConsumerState<StudentsListPage> {
         onDeleted: onDeleted,
         deleteIcon: const Icon(Icons.close, size: 18),
         deleteIconColor: AppColors.textPrimary,
-        backgroundColor: AppColors.teal.withOpacity(0.2),
+        backgroundColor: AppColors.teal.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: const BorderSide(color: AppColors.teal),
@@ -553,21 +556,25 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          ...SortOption.values.map(
-            (option) => RadioListTile<SortOption>(
-              title: Text(
-                option.displayName,
-                style: AppTextStyles.bodyMedium,
-              ),
-              value: option,
-              groupValue: _tempSortOption,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _tempSortOption = value);
-                }
-              },
-              activeColor: AppColors.teal,
-              contentPadding: EdgeInsets.zero,
+          RadioGroup<SortOption>(
+            groupValue: _tempSortOption,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _tempSortOption = value);
+              }
+            },
+            child: Column(
+              children: SortOption.values.map(
+                (option) => RadioListTile<SortOption>(
+                  title: Text(
+                    option.displayName,
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                  value: option,
+                  activeColor: AppColors.teal,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ).toList(),
             ),
           ),
 

@@ -11,6 +11,10 @@ import '../widgets/student_card.dart';
 import 'package:intl/intl.dart';
 import 'students_list_page.dart';
 import 'student_detail_page.dart';
+import 'add_student_page.dart';
+import 'create_workout_page.dart';
+import 'physical_assessment_page.dart';
+import '../../domain/entities/student_entity.dart';
 
 
 
@@ -36,6 +40,123 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
 
   Future<void> _onRefresh() async {
     await ref.read(trainerDashboardProvider.notifier).refresh();
+  }
+
+  void _showSelectStudentSheet(BuildContext context, List<StudentEntity> students, {required void Function(StudentEntity) onSelect}) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Selecione o Aluno', style: AppTextStyles.headlineMedium),
+            const SizedBox(height: 16),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: students.length,
+                itemBuilder: (context, index) {
+                  final student = students[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: AppColors.teal.withValues(alpha: 0.1),
+                      child: Text(student.name[0].toUpperCase(), style: const TextStyle(color: AppColors.lightTeal)),
+                    ),
+                    title: Text(student.name, style: AppTextStyles.bodyLarge),
+                    subtitle: Text(student.email, style: AppTextStyles.bodySmall),
+                    onTap: () {
+                      Navigator.pop(context);
+                      onSelect(student);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('NOTIFICAÇÕES', style: AppTextStyles.headlineMedium),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildNotificationItem(
+              icon: Icons.check_circle_outline,
+              color: AppColors.success,
+              title: 'Treino Concluído',
+              subtitle: 'Ana Paula Silva finalizou o Treino B.',
+              time: 'Há 10 min',
+            ),
+            const Divider(color: AppColors.surfaceLight),
+            _buildNotificationItem(
+              icon: Icons.warning_amber_rounded,
+              color: AppColors.error,
+              title: 'Mensalidade Atrasada',
+              subtitle: 'Pedro Oliveira está com pagamento pendente.',
+              time: 'Há 2 horas',
+            ),
+            const Divider(color: AppColors.surfaceLight),
+            _buildNotificationItem(
+              icon: Icons.local_fire_department,
+              color: AppColors.warning,
+              title: 'Foco no Treino',
+              subtitle: 'Carlos Mendes concluiu o 3º treino da semana.',
+              time: 'Há 1 dia',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Fechar', style: TextStyle(color: AppColors.teal)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationItem({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required String time,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTextStyles.headlineSmall.copyWith(fontSize: 14)),
+                const SizedBox(height: 4),
+                Text(subtitle, style: AppTextStyles.bodyMedium.copyWith(fontSize: 12)),
+                const SizedBox(height: 2),
+                Text(time, style: AppTextStyles.bodySmall.copyWith(fontSize: 10)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -71,7 +192,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                           const SizedBox(height: 24),
 
                           // Ações rápidas
-                          _buildQuickActionsSection(),
+                          _buildQuickActionsSection(dashboardState),
 
                           const SizedBox(height: 24),
 
@@ -121,13 +242,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
             IconButton(
               icon: const Icon(Icons.notifications_outlined),
               color: AppColors.textPrimary,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Funcionalidade em desenvolvimento'),
-                  ),
-                );
-              },
+              onPressed: () => _showNotificationsDialog(context),
             ),
             Positioned(
               right: 8,
@@ -171,7 +286,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.darkTeal.withOpacity(0.1),
+                AppColors.darkTeal.withValues(alpha: 0.1),
                 AppColors.background,
               ],
             ),
@@ -229,7 +344,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 value: state.pendingPayments.toString(),
                 icon: Icons.warning,
                 iconColor: AppColors.warning,
-                backgroundColor: AppColors.warning.withOpacity(0.1),
+                backgroundColor: AppColors.warning.withValues(alpha: 0.1),
                 onTap: () {
                   // TODO: Ver pagamentos pendentes
                 },
@@ -251,7 +366,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
     );
   }
 
-  Widget _buildQuickActionsSection() {
+  Widget _buildQuickActionsSection(TrainerDashboardState dashboardState) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -268,9 +383,9 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
             icon: Icons.person_add,
             color: AppColors.teal,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Funcionalidade em desenvolvimento'),
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AddStudentPage(),
                 ),
               );
             },
@@ -282,10 +397,16 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
             icon: Icons.fitness_center,
             color: AppColors.success,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Funcionalidade em desenvolvimento'),
-                ),
+              _showSelectStudentSheet(
+                context,
+                dashboardState.students,
+                onSelect: (student) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CreateWorkoutPage(student: student),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -296,9 +417,9 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
             icon: Icons.assignment,
             color: AppColors.info,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Funcionalidade em desenvolvimento'),
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const PhysicalAssessmentPage(),
                 ),
               );
             },
@@ -395,9 +516,9 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
   Widget _buildFAB() {
     return FloatingActionButton.extended(
       onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Funcionalidade em desenvolvimento'),
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const AddStudentPage(),
           ),
         );
       },

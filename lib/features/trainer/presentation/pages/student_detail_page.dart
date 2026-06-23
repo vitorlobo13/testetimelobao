@@ -10,10 +10,15 @@ import '../widgets/section_card.dart';
 import '../widgets/workout_history_item.dart';
 import '../widgets/payment_history_item.dart';
 import 'create_workout_page.dart';
+import 'add_student_page.dart';
+import 'physical_assessment_page.dart';
+import '../providers/trainer_provider.dart';
 import '../../../nutrition/presentation/pages/create_diet_page.dart';
 import '../../../nutrition/presentation/providers/diet_provider.dart';
-import '../../../nutrition/presentation/widgets/meal_card.dart';
 import '../../../nutrition/presentation/widgets/macros_chart.dart';
+import '../../../nutrition/presentation/widgets/meal_card.dart';
+import '../../../nutrition/presentation/widgets/food_item_card.dart';
+import '../../../nutrition/domain/entities/meal_entity.dart';
 
 
 /// Tela de detalhes completos do aluno
@@ -32,6 +37,7 @@ class StudentDetailPage extends ConsumerStatefulWidget {
 class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late StudentEntity _currentStudent;
 
   @override
   void initState() {
@@ -51,47 +57,49 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
 
   @override
   Widget build(BuildContext context) {
+    _currentStudent = ref.watch(trainerDashboardProvider).students.firstWhere(
+      (s) => s.id == widget.student.id,
+      orElse: () => widget.student,
+    );
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // App Bar com foto e nome
-          _buildAppBar(),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            // App Bar com foto e nome
+            _buildAppBar(),
 
-          // Abas
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SliverTabBarDelegate(
-              TabBar(
-                controller: _tabController,
-                labelColor: AppColors.teal,
-                unselectedLabelColor: AppColors.textSecondary,
-                indicatorColor: AppColors.teal,
-                labelStyle: AppTextStyles.buttonMedium,
-                isScrollable: true,
-                tabs: const [
-                  Tab(text: 'Informações'),
-                  Tab(text: 'Treinos'),
-                  Tab(text: 'Pagamentos'),
-                  Tab(text: 'Dieta'),
-                ],
+            // Abas
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverTabBarDelegate(
+                TabBar(
+                  controller: _tabController,
+                  labelColor: AppColors.teal,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  indicatorColor: AppColors.teal,
+                  labelStyle: AppTextStyles.buttonMedium,
+                  isScrollable: true,
+                  tabs: const [
+                    Tab(text: 'Informações'),
+                    Tab(text: 'Treinos'),
+                    Tab(text: 'Pagamentos'),
+                    Tab(text: 'Dieta'),
+                  ],
+                ),
               ),
             ),
-          ),
-
-          // Conteúdo das abas
-          SliverFillRemaining(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildInfoTab(),
-                _buildWorkoutsTab(),                
-                _buildPaymentsTab(),
-                _buildDietTab(),
-              ],
-            ),
-          ),
-        ],
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildInfoTab(),
+            _buildWorkoutsTab(),                
+            _buildPaymentsTab(),
+            _buildDietTab(),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomBar(),
     );
@@ -110,8 +118,12 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
         IconButton(
           icon: const Icon(Icons.edit, color: AppColors.textPrimary),
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Editar aluno')),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => AddStudentPage(
+                  student: _currentStudent,
+                ),
+              ),
             );
           },
         ),
@@ -153,7 +165,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.darkTeal.withOpacity(0.3),
+                AppColors.darkTeal.withValues(alpha: 0.3),
                 AppColors.surface,
               ],
             ),
@@ -168,7 +180,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                 const SizedBox(height: 16),
                 // Nome
                 Text(
-                  widget.student.name,
+                  _currentStudent.name,
                   style: AppTextStyles.headlineLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -193,10 +205,10 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
         border: Border.all(color: AppColors.teal, width: 3),
         boxShadow: AppColors.shadowLarge,
       ),
-      child: widget.student.photoUrl != null
+      child: _currentStudent.photoUrl != null
           ? ClipOval(
               child: Image.network(
-                widget.student.photoUrl!,
+                _currentStudent.photoUrl!,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => _buildInitials(),
               ),
@@ -206,7 +218,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
   }
 
   Widget _buildInitials() {
-    final initials = widget.student.name
+    final initials = _currentStudent.name
         .split(' ')
         .take(2)
         .map((word) => word.isNotEmpty ? word[0].toUpperCase() : '')
@@ -228,12 +240,12 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
       alignment: WrapAlignment.center,
       children: [
         _buildBadge(
-          widget.student.status.displayName,
-          _getStatusColor(widget.student.status),
+          _currentStudent.status.displayName,
+          _getStatusColor(_currentStudent.status),
         ),
-        if (widget.student.planType != null)
+        if (_currentStudent.planType != null)
           _buildBadge(
-            widget.student.planType!,
+            _currentStudent.planType!,
             AppColors.teal,
           ),
       ],
@@ -244,7 +256,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),
@@ -276,7 +288,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => CreateDietPage(
-                      student: widget.student,
+                      student: _currentStudent,
                     ),
                   ),
                 );
@@ -291,10 +303,12 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                   child: CustomButton(
                     text: 'EDITAR DIETA',
                     onPressed: () {
-                      // TODO: Implementar edição
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Edição em desenvolvimento'),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => CreateDietPage(
+                            student: _currentStudent,
+                            initialDiet: diet,
+                          ),
                         ),
                       );
                     },
@@ -309,7 +323,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => CreateDietPage(
-                          student: widget.student,
+                          student: _currentStudent,
                         ),
                       ),
                     );
@@ -382,60 +396,9 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               child: Column(
                 children: [
                   ...diet.meals.map((meal) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    meal.name,
-                                    style: AppTextStyles.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  meal.time,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.textTertiary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              children: [
-                                _buildMiniMacro(
-                                  '${meal.totalCalories.toStringAsFixed(0)} kcal',
-                                  AppColors.warning,
-                                ),
-                                _buildMiniMacro(
-                                  'P: ${meal.totalProtein.toStringAsFixed(0)}g',
-                                  AppColors.error,
-                                ),
-                                _buildMiniMacro(
-                                  'C: ${meal.totalCarbs.toStringAsFixed(0)}g',
-                                  AppColors.success,
-                                ),
-                                _buildMiniMacro(
-                                  'G: ${meal.totalFats.toStringAsFixed(0)}g',
-                                  AppColors.info,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                    return MealCard(
+                      meal: meal,
+                      onTap: () => _showMealDetailsBottomSheet(context, meal),
                     );
                   }),
                 ],
@@ -468,23 +431,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
     );
   }
 
-  Widget _buildMiniMacro(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: AppTextStyles.bodySmall.copyWith(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-        ),
-      ),
-    );
-  }
+
   Color _getStatusColor(StudentStatus status) {
     switch (status) {
       case StudentStatus.active:
@@ -514,13 +461,13 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               children: [
                 InfoRow(
                   label: 'Email',
-                  value: widget.student.email,
+                  value: _currentStudent.email,
                   icon: Icons.email_outlined,
                 ),
-                if (widget.student.phone != null)
+                if (_currentStudent.phone != null)
                   InfoRow(
                     label: 'Telefone',
-                    value: widget.student.phone!,
+                    value: _currentStudent.phone!,
                     icon: Icons.phone_outlined,
                     trailing: IconButton(
                       icon: const Icon(Icons.phone, color: AppColors.teal),
@@ -544,8 +491,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                     Expanded(
                       child: InfoRow(
                         label: 'Peso',
-                        value: widget.student.weight != null
-                            ? '${widget.student.weight} kg'
+                        value: _currentStudent.weight != null
+                            ? '${_currentStudent.weight} kg'
                             : 'Não informado',
                         icon: Icons.monitor_weight,
                       ),
@@ -553,8 +500,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                     Expanded(
                       child: InfoRow(
                         label: 'Altura',
-                        value: widget.student.height != null
-                            ? '${widget.student.height} cm'
+                        value: _currentStudent.height != null
+                            ? '${_currentStudent.height} cm'
                             : 'Não informado',
                         icon: Icons.height,
                       ),
@@ -566,18 +513,18 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                     Expanded(
                       child: InfoRow(
                         label: 'IMC',
-                        value: widget.student.bmi != null
-                            ? widget.student.bmi!.toStringAsFixed(1)
+                        value: _currentStudent.bmi != null
+                            ? _currentStudent.bmi!.toStringAsFixed(1)
                             : 'N/A',
-                        valueColor: _getBmiColor(widget.student.bmi),
+                        valueColor: _getBmiColor(_currentStudent.bmi),
                         icon: Icons.assessment,
                       ),
                     ),
                     Expanded(
                       child: InfoRow(
                         label: 'Idade',
-                        value: widget.student.age != null
-                            ? '${widget.student.age} anos'
+                        value: _currentStudent.age != null
+                            ? '${_currentStudent.age} anos'
                             : 'Não informado',
                         icon: Icons.cake,
                       ),
@@ -596,7 +543,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               children: [
                 InfoRow(
                   label: 'Data de Matrícula',
-                  value: DateFormat('dd/MM/yyyy').format(widget.student.enrollmentDate),
+                  value: DateFormat('dd/MM/yyyy').format(_currentStudent.enrollmentDate),
                   icon: Icons.calendar_today,
                 ),
                 InfoRow(
@@ -604,10 +551,10 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                   value: _getEnrollmentDuration(),
                   icon: Icons.schedule,
                 ),
-                if (widget.student.monthlyFee != null)
+                if (_currentStudent.monthlyFee != null)
                   InfoRow(
                     label: 'Mensalidade',
-                    value: currencyFormat.format(widget.student.monthlyFee),
+                    value: currencyFormat.format(_currentStudent.monthlyFee),
                     icon: Icons.attach_money,
                     valueColor: AppColors.success,
                   ),
@@ -623,15 +570,15 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               children: [
                 InfoRow(
                   label: 'Total de Treinos',
-                  value: widget.student.totalWorkouts.toString(),
+                  value: _currentStudent.totalWorkouts.toString(),
                   icon: Icons.fitness_center,
                 ),
-                if (widget.student.lastWorkoutDate != null)
+                if (_currentStudent.lastWorkoutDate != null)
                   InfoRow(
                     label: 'Último Treino',
-                    value: '${widget.student.daysSinceLastWorkout} dia(s) atrás',
+                    value: '${_currentStudent.daysSinceLastWorkout} dia(s) atrás',
                     icon: Icons.update,
-                    valueColor: widget.student.daysSinceLastWorkout! > 7
+                    valueColor: _currentStudent.daysSinceLastWorkout! > 7
                         ? AppColors.error
                         : AppColors.success,
                   ),
@@ -683,11 +630,15 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
             icon: Icons.fitness_center,
             actionLabel: 'Editar',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Editar treino')),
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CreateWorkoutPage(
+                    student: _currentStudent,
+                  ),
+                ),
               );
             },
-            child: widget.student.currentWorkoutId != null
+            child: _currentStudent.currentWorkoutId != null
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -730,9 +681,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
             icon: Icons.history,
             actionLabel: 'Ver todos',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ver histórico completo')),
-              );
+              _showWorkoutHistoryBottomSheet(context, workoutHistory);
             },
             child: Column(
               children: workoutHistory.isEmpty
@@ -765,19 +714,19 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
     final paymentHistory = [
       PaymentHistoryItem(
         date: DateTime(2024, 5, 1),
-        amount: widget.student.monthlyFee ?? 250.00,
+        amount: _currentStudent.monthlyFee ?? 250.00,
         paid: false,
         reference: 'Maio/2024',
       ),
       PaymentHistoryItem(
         date: DateTime(2024, 4, 1),
-        amount: widget.student.monthlyFee ?? 250.00,
+        amount: _currentStudent.monthlyFee ?? 250.00,
         paid: true,
         reference: 'Abril/2024',
       ),
       PaymentHistoryItem(
         date: DateTime(2024, 3, 1),
-        amount: widget.student.monthlyFee ?? 250.00,
+        amount: _currentStudent.monthlyFee ?? 250.00,
         paid: true,
         reference: 'Março/2024',
       ),
@@ -795,26 +744,26 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               children: [
                 InfoRow(
                   label: 'Mensalidade',
-                  value: widget.student.monthlyFee != null
-                      ? currencyFormat.format(widget.student.monthlyFee)
+                  value: _currentStudent.monthlyFee != null
+                      ? currencyFormat.format(_currentStudent.monthlyFee)
                       : 'Não definida',
                   icon: Icons.attach_money,
                   valueColor: AppColors.success,
                 ),
-                if (widget.student.nextPaymentDate != null)
+                if (_currentStudent.nextPaymentDate != null)
                   InfoRow(
                     label: 'Próximo Vencimento',
-                    value: DateFormat('dd/MM/yyyy').format(widget.student.nextPaymentDate!),
+                    value: DateFormat('dd/MM/yyyy').format(_currentStudent.nextPaymentDate!),
                     icon: Icons.event,
-                    valueColor: widget.student.isPaymentOverdue
+                    valueColor: _currentStudent.isPaymentOverdue
                         ? AppColors.error
                         : AppColors.textPrimary,
                   ),
                 InfoRow(
                   label: 'Status',
-                  value: widget.student.paymentStatus.displayName,
+                  value: _currentStudent.paymentStatus.displayName,
                   icon: Icons.info_outline,
-                  valueColor: _getPaymentStatusColor(widget.student.paymentStatus),
+                  valueColor: _getPaymentStatusColor(_currentStudent.paymentStatus),
                 ),
               ],
             ),
@@ -826,9 +775,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
             icon: Icons.receipt_long,
             actionLabel: 'Ver todos',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ver histórico completo')),
-              );
+              _showPaymentHistoryBottomSheet(context, paymentHistory);
             },
             child: Column(
               children: paymentHistory,
@@ -849,7 +796,7 @@ Widget _buildBottomBar() {
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withValues(alpha: 0.1),
           blurRadius: 8,
           offset: const Offset(0, -2),
         ),
@@ -864,7 +811,7 @@ Widget _buildBottomBar() {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => CreateWorkoutPage(
-                    student: widget.student,
+                    student: _currentStudent,
                   ),
                 ),
               );
@@ -877,8 +824,12 @@ Widget _buildBottomBar() {
         CustomButton(
           text: '',
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Registrar avaliação')),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => PhysicalAssessmentPage(
+                  initialStudent: _currentStudent,
+                ),
+              ),
             );
           },
           type: ButtonType.secondary,
@@ -914,7 +865,7 @@ Widget _buildBottomBar() {
   }
 
   String _getEnrollmentDuration() {
-    final duration = DateTime.now().difference(widget.student.enrollmentDate);
+    final duration = DateTime.now().difference(_currentStudent.enrollmentDate);
     final months = (duration.inDays / 30).floor();
     
     if (months < 1) {
@@ -928,6 +879,200 @@ Widget _buildBottomBar() {
           ? '$years ano(s) e $remainingMonths mês(es)'
           : '$years ano(s)';
     }
+  }
+
+  void _showWorkoutHistoryBottomSheet(
+    BuildContext context,
+    List<Widget> items,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Histórico de Treinos',
+                      style: AppTextStyles.headlineMedium,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView(
+                    children: items,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPaymentHistoryBottomSheet(
+    BuildContext context,
+    List<Widget> items,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Histórico de Pagamentos',
+                      style: AppTextStyles.headlineMedium,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView(
+                    children: items,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showMealDetailsBottomSheet(BuildContext context, MealEntity meal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meal.name,
+                          style: AppTextStyles.headlineMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.access_time,
+                              size: 16,
+                              color: AppColors.textTertiary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              meal.time,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '${meal.foods.length} alimento(s)',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: meal.foods.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.restaurant,
+                            size: 64,
+                            color: AppColors.textTertiary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Nenhum alimento recomendado',
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: meal.foods.length,
+                      itemBuilder: (context, index) {
+                        final food = meal.foods[index];
+                        return FoodItemCard(food: food);
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

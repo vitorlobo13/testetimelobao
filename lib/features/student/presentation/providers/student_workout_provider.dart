@@ -46,7 +46,9 @@ class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
   @override
   StudentWorkoutState build() {
     loadCurrentWorkout();
-    return const StudentWorkoutState();
+    return StudentWorkoutState(
+      history: _generateMockHistory(),
+    );
   }
 
   /// Carrega treino atual do aluno
@@ -343,6 +345,102 @@ class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
       createdAt: DateTime.now().subtract(const Duration(days: 7)),
       isActive: true,
     );
+  }
+
+  /// Gera histórico de treinos mockado
+  List<WorkoutSessionEntity> _generateMockHistory() {
+    return [
+      WorkoutSessionEntity(
+        id: 'session_old_1',
+        studentId: 'student_123',
+        workoutId: 'workout_1',
+        divisionId: 'div_1',
+        startTime: DateTime.now().subtract(const Duration(days: 2, hours: 2)),
+        endTime: DateTime.now().subtract(const Duration(days: 2, hours: 1)),
+        completed: true,
+        exerciseSessions: [
+          ExerciseSessionEntity(
+            id: 'ex_sess_1',
+            workoutExerciseId: 'ex_1',
+            completed: true,
+            sets: [
+              SetSessionEntity(
+                setNumber: 1,
+                completed: true,
+                actualReps: 10,
+                actualLoad: 60,
+                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 45)),
+              ),
+              SetSessionEntity(
+                setNumber: 2,
+                completed: true,
+                actualReps: 10,
+                actualLoad: 60,
+                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 40)),
+              ),
+              SetSessionEntity(
+                setNumber: 3,
+                completed: true,
+                actualReps: 8,
+                actualLoad: 65,
+                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 35)),
+              ),
+            ],
+          ),
+          ExerciseSessionEntity(
+            id: 'ex_sess_2',
+            workoutExerciseId: 'ex_2',
+            completed: true,
+            sets: [
+              SetSessionEntity(
+                setNumber: 1,
+                completed: true,
+                actualReps: 12,
+                actualLoad: 20,
+                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 25)),
+              ),
+              SetSessionEntity(
+                setNumber: 2,
+                completed: true,
+                actualReps: 12,
+                actualLoad: 20,
+                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 20)),
+              ),
+            ],
+          ),
+        ],
+      ),
+      WorkoutSessionEntity(
+        id: 'session_old_2',
+        studentId: 'student_123',
+        workoutId: 'workout_1',
+        divisionId: 'div_2',
+        startTime: DateTime.now().subtract(const Duration(days: 4, hours: 1)),
+        endTime: DateTime.now().subtract(const Duration(days: 4)),
+        completed: true,
+        exerciseSessions: [
+          ExerciseSessionEntity(
+            id: 'ex_sess_3',
+            workoutExerciseId: 'ex_4',
+            completed: true,
+            sets: [
+              SetSessionEntity(
+                setNumber: 1,
+                completed: true,
+                actualReps: 10,
+                completedAt: DateTime.now().subtract(const Duration(days: 4, minutes: 45)),
+              ),
+              SetSessionEntity(
+                setNumber: 2,
+                completed: true,
+                actualReps: 8,
+                completedAt: DateTime.now().subtract(const Duration(days: 4, minutes: 40)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ];
   }
 }
 

@@ -1,4 +1,3 @@
-import '../../../trainer/domain/entities/workout_entity.dart';
 
 /// Sessão de treino do aluno
 class WorkoutSessionEntity {

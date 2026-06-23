@@ -69,6 +69,11 @@ class DietNotifier extends Notifier<DietState> {
     state = state.copyWith(meals: []);
   }
 
+  /// Inicia construtor de dieta com dados de uma dieta existente
+  void startDietBuilderFrom(DietEntity diet) {
+    state = state.copyWith(meals: List<MealEntity>.from(diet.meals));
+  }
+
   /// Adiciona refeição
   void addMeal(String name, String time) {
     final newMeal = MealEntity(

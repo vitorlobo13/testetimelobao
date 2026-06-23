@@ -4,11 +4,15 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../nutrition/domain/entities/diet_entity.dart';
 import '../../../nutrition/presentation/pages/diet_view_page.dart';
 import '../../../nutrition/presentation/providers/diet_provider.dart';
+import '../../../trainer/domain/entities/workout_entity.dart';
 import '../providers/student_workout_provider.dart';
 import '../widgets/workout_card.dart';
 import 'workout_execution_page.dart';
+import 'workout_history_page.dart';
+import 'student_profile_page.dart';
 
 /// Tela home do aluno
 class StudentHomePage extends ConsumerStatefulWidget {
@@ -113,7 +117,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.darkTeal.withOpacity(0.1),
+                AppColors.darkTeal.withValues(alpha: 0.1),
                 AppColors.background,
               ],
             ),
@@ -124,9 +128,9 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
         IconButton(
           icon: const Icon(Icons.history, color: AppColors.textPrimary),
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Histórico de treinos em desenvolvimento'),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const WorkoutHistoryPage(),
               ),
             );
           },
@@ -134,9 +138,9 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
         IconButton(
           icon: const Icon(Icons.person_outline, color: AppColors.textPrimary),
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Perfil em desenvolvimento'),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const StudentProfilePage(),
               ),
             );
           },
@@ -233,7 +237,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
     );
   }
 
-  Widget _buildWorkoutInfo(workout) {
+  Widget _buildWorkoutInfo(WorkoutEntity workout) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -249,7 +253,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.teal.withOpacity(0.2),
+                  color: AppColors.teal.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -329,7 +333,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
     );
   }
 
-  Widget _buildDietPreview(BuildContext context, diet) {
+  Widget _buildDietPreview(BuildContext context, DietEntity diet) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
@@ -347,7 +351,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.success.withOpacity(0.8),
+              AppColors.success.withValues(alpha: 0.8),
               AppColors.success,
             ],
           ),
@@ -362,7 +366,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -386,7 +390,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
                       Text(
                         '${diet.totalMeals} refeições',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -404,7 +408,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
 
             Container(
               height: 1,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
             ),
 
             const SizedBox(height: 16),

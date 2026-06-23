@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../trainer/domain/entities/workout_entity.dart';
+import '../../domain/entities/workout_session_entity.dart';
 import '../providers/student_workout_provider.dart';
 import '../widgets/exercise_execution_card.dart';
 import '../widgets/timer_widget.dart';
@@ -260,10 +261,11 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
     final completionPercentage = session.completionPercentage;
     final isCompleted = completionPercentage == 100;
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         await _showCancelDialog();
-        return false;
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
@@ -351,7 +353,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
@@ -368,7 +370,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
     );
   }
 
-  Widget _buildSessionInfo(session) {
+  Widget _buildSessionInfo(WorkoutSessionEntity session) {
     final duration = session.duration;
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -384,7 +386,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
           Text(
             'Treino em Andamento',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 8),
@@ -407,7 +409,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
               Container(
                 width: 1,
                 height: 40,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
               ),
               _buildStatItem(
                 icon: Icons.fitness_center,
@@ -434,7 +436,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
         const SizedBox(height: 4),

@@ -80,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen>
             end: Alignment.bottomCenter,
             colors: [
               AppColors.background,
-              AppColors.darkTeal.withOpacity(0.2),
+              AppColors.darkTeal.withValues(alpha: 0.2),
               AppColors.background,
             ],
           ),

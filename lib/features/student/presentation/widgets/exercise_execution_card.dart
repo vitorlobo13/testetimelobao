@@ -53,8 +53,8 @@ class ExerciseExecutionCard extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: exerciseSession.completed
-                          ? AppColors.success.withOpacity(0.2)
-                          : AppColors.teal.withOpacity(0.2),
+                          ? AppColors.success.withValues(alpha: 0.2)
+                          : AppColors.teal.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -208,7 +208,7 @@ class ExerciseExecutionCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: set.completed
-            ? AppColors.success.withOpacity(0.1)
+            ? AppColors.success.withValues(alpha: 0.1)
             : AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
@@ -224,7 +224,7 @@ class ExerciseExecutionCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: set.completed
                   ? AppColors.success
-                  : AppColors.teal.withOpacity(0.2),
+                  : AppColors.teal.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Center(

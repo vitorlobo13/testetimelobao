@@ -34,8 +34,8 @@ class WorkoutHistoryItem extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: completed
-                  ? AppColors.success.withOpacity(0.2)
-                  : AppColors.warning.withOpacity(0.2),
+                  ? AppColors.success.withValues(alpha: 0.2)
+                  : AppColors.warning.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(

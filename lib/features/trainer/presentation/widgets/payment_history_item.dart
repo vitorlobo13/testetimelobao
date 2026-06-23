@@ -29,7 +29,7 @@ class PaymentHistoryItem extends StatelessWidget {
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: paid ? AppColors.success.withOpacity(0.3) : AppColors.error.withOpacity(0.3),
+          color: paid ? AppColors.success.withValues(alpha: 0.3) : AppColors.error.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -40,8 +40,8 @@ class PaymentHistoryItem extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: paid
-                  ? AppColors.success.withOpacity(0.2)
-                  : AppColors.error.withOpacity(0.2),
+                  ? AppColors.success.withValues(alpha: 0.2)
+                  : AppColors.error.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -87,8 +87,8 @@ class PaymentHistoryItem extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: paid
-                  ? AppColors.success.withOpacity(0.2)
-                  : AppColors.error.withOpacity(0.2),
+                  ? AppColors.success.withValues(alpha: 0.2)
+                  : AppColors.error.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

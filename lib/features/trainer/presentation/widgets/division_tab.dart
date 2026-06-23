@@ -53,7 +53,7 @@ class DivisionTab extends StatelessWidget {
                   '$exerciseCount exercício(s)',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: isSelected
-                        ? Colors.white.withOpacity(0.8)
+                        ? Colors.white.withValues(alpha: 0.8)
                         : AppColors.textTertiary,
                     fontSize: 10,
                   ),

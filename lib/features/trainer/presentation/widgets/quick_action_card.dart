@@ -41,7 +41,7 @@ class QuickActionCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: color != null
                     ? LinearGradient(
-                        colors: [color!, color!.withOpacity(0.7)],
+                        colors: [color!, color!.withValues(alpha: 0.7)],
                       )
                     : AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(12),

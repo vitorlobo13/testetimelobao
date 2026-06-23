@@ -32,7 +32,7 @@ class StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: backgroundColor != null
               ? LinearGradient(
-                  colors: [backgroundColor!, backgroundColor!.withOpacity(0.8)],
+                  colors: [backgroundColor!, backgroundColor!.withValues(alpha: 0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -49,7 +49,7 @@ class StatCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (iconColor ?? AppColors.teal).withOpacity(0.2),
+                color: (iconColor ?? AppColors.teal).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

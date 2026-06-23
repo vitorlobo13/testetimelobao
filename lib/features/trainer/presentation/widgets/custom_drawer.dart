@@ -4,6 +4,14 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../pages/students_list_page.dart';
+import '../pages/frequency_report_page.dart';
+import '../pages/workout_library_page.dart';
+import '../pages/diet_library_page.dart';
+import '../pages/financial_management_page.dart';
+import '../pages/exercise_videos_page.dart';
+import '../pages/physical_assessment_page.dart';
+import '../pages/anamnese_page.dart';
+import '../../../../shared/widgets/feature_placeholder_page.dart';
 
 /// Menu lateral customizado
 class CustomDrawer extends ConsumerWidget {
@@ -35,6 +43,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Dashboard',
                     onTap: () {
                       Navigator.pop(context);
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
                     },
                   ),
                   _buildMenuItem(
@@ -43,9 +52,24 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Meus Alunos',
                     onTap: () {
                       Navigator.pop(context);
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const StudentsListPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.bar_chart,
+                    title: 'Relatório de frequência',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FrequencyReportPage(),
                         ),
                       );
                     },
@@ -56,9 +80,10 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Biblioteca de Treinos',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Biblioteca de treinos em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const WorkoutLibraryPage(),
                         ),
                       );
                     },
@@ -70,9 +95,10 @@ class CustomDrawer extends ConsumerWidget {
                     subtitle: '+1800 vídeos',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ExerciseVideosPage(),
                         ),
                       );
                     },
@@ -83,9 +109,10 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Avaliações Físicas',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const PhysicalAssessmentPage(),
                         ),
                       );
                     },
@@ -96,9 +123,10 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Nutrição e Dietas',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Biblioteca de dietas em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const DietLibraryPage(),
                         ),
                       );
                     },
@@ -109,9 +137,10 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Anamnese',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AnamnesePage(),
                         ),
                       );
                     },
@@ -128,9 +157,10 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Gestão Financeira',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FinancialManagementPage(),
                         ),
                       );
                     },
@@ -141,9 +171,13 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Marketing',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FeaturePlaceholderPage(
+                            title: 'Marketing',
+                            icon: Icons.campaign,
+                          ),
                         ),
                       );
                     },
@@ -154,9 +188,13 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Relatórios',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FeaturePlaceholderPage(
+                            title: 'Relatórios',
+                            icon: Icons.analytics,
+                          ),
                         ),
                       );
                     },
@@ -173,9 +211,13 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Configurações',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FeaturePlaceholderPage(
+                            title: 'Configurações',
+                            icon: Icons.settings,
+                          ),
                         ),
                       );
                     },
@@ -186,9 +228,13 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Ajuda e Suporte',
                     onTap: () {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidade em desenvolvimento'),
+                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FeaturePlaceholderPage(
+                            title: 'Ajuda e Suporte',
+                            icon: Icons.help_outline,
+                          ),
                         ),
                       );
                     },
@@ -224,7 +270,7 @@ class CustomDrawer extends ConsumerWidget {
             height: 70,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               border: Border.all(color: Colors.white, width: 3),
             ),
             child: const Icon(
@@ -250,7 +296,7 @@ class CustomDrawer extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -330,7 +376,7 @@ class CustomDrawer extends ConsumerWidget {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.error.withOpacity(0.1),
+            color: AppColors.error.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(

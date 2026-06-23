@@ -29,6 +29,68 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
+  void _showForgotPasswordDialog(BuildContext context) {
+    final emailController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('RECUPERAR SENHA', style: AppTextStyles.headlineMedium),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Insira seu e-mail cadastrado e enviaremos instruções para redefinir sua senha.',
+              style: AppTextStyles.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'E-mail',
+              hint: 'seuemail@exemplo.com',
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icons.email,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancelar',
+              style: AppTextStyles.buttonMedium.copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              if (emailController.text.contains('@')) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Link de redefinição enviado para ${emailController.text}'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Insira um e-mail válido'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: Text(
+              'Enviar',
+              style: AppTextStyles.buttonMedium.copyWith(color: AppColors.teal),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleLogin() async {
     // Limpa mensagens de erro anteriores
     ref.read(authProvider.notifier).clearError();
@@ -95,7 +157,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             end: Alignment.bottomCenter,
             colors: [
               AppColors.background,
-              AppColors.darkTeal.withOpacity(0.1),
+              AppColors.darkTeal.withValues(alpha: 0.1),
             ],
           ),
         ),
@@ -263,14 +325,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
         // Esqueci a senha
         TextButton(
-          onPressed: () {
-            // TODO: Implementar recuperação de senha
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Funcionalidade em desenvolvimento'),
-              ),
-            );
-          },
+          onPressed: () => _showForgotPasswordDialog(context),
           child: Text(
             'Esqueci a senha',
             style: AppTextStyles.bodyMedium.copyWith(

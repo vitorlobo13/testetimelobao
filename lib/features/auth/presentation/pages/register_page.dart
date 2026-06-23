@@ -84,7 +84,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             end: Alignment.bottomCenter,
             colors: [
               AppColors.background,
-              AppColors.darkTeal.withOpacity(0.1),
+              AppColors.darkTeal.withValues(alpha: 0.1),
             ],
           ),
         ),

@@ -44,7 +44,7 @@ class ProfileCard extends StatelessWidget {
               ? AppColors.shadowLarge
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -62,7 +62,7 @@ class ProfileCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.white.withOpacity(0.2)
+                        ? Colors.white.withValues(alpha: 0.2)
                         : AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -120,7 +120,7 @@ class ProfileCard extends StatelessWidget {
               description,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: isSelected
-                    ? AppColors.textPrimary.withOpacity(0.9)
+                    ? AppColors.textPrimary.withValues(alpha: 0.9)
                     : AppColors.textSecondary,
               ),
             ),
@@ -131,7 +131,7 @@ class ProfileCard extends StatelessWidget {
             Container(
               height: 1,
               color: isSelected
-                  ? Colors.white.withOpacity(0.2)
+                  ? Colors.white.withValues(alpha: 0.2)
                   : AppColors.surfaceLight,
             ),
 
@@ -163,7 +163,7 @@ class ProfileCard extends StatelessWidget {
               feature,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: isSelected
-                    ? AppColors.textPrimary.withOpacity(0.9)
+                    ? AppColors.textPrimary.withValues(alpha: 0.9)
                     : AppColors.textSecondary,
               ),
             ),

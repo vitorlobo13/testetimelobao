@@ -167,6 +167,15 @@ class StudentCard extends StatelessWidget {
         break;
     }
 
+    // Situação do acesso ao app tem prioridade na etiqueta.
+    if (student.linkStatus == LinkStatus.archived) {
+      color = AppColors.textTertiary;
+      text = 'Saiu do time';
+    } else if (student.linkStatus == LinkStatus.pending) {
+      color = AppColors.info;
+      text = 'Convite pendente';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(

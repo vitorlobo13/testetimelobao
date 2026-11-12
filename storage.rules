@@ -1,0 +1,24 @@
+rules_version = '2';
+
+// Storage do Time Lobão.
+// - Vídeos de exercício: o personal envia só na própria pasta (até 20 MB, só
+//   vídeo); qualquer usuário logado pode assistir (alunos veem os vídeos dos treinos).
+// - Fotos de avaliação (leva 2): só o personal do vínculo e o próprio aluno.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function isTrainer() { return signedIn() && request.auth.token.role == 'trainer'; }
+
+    match /trainers/{trainerId}/exercise-videos/{file} {
+      allow read: if signedIn();
+      allow create, update: if isTrainer() && request.auth.uid == trainerId
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType.matches('video/.*');
+      allow delete: if isTrainer() && request.auth.uid == trainerId;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -157,7 +157,7 @@ class _ProfileSelectionPageState extends ConsumerState<ProfileSelectionPage>
                           features: const [
                             'Gestão completa de alunos',
                             'Prescrição de treinos e exercícios',
-                            'Biblioteca com +1800 vídeos',
+                            'Catálogo de exercícios com vídeos',
                             'Anamnese e avaliações físicas',
                             'Controle financeiro',
                             'Ferramentas de marketing',

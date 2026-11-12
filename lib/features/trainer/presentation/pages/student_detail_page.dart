@@ -1,3 +1,5 @@
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +15,7 @@ import 'create_workout_page.dart';
 import 'add_student_page.dart';
 import 'physical_assessment_page.dart';
 import '../providers/trainer_provider.dart';
+import '../../../invite/presentation/widgets/invite_share_sheet.dart';
 import '../../../nutrition/presentation/pages/create_diet_page.dart';
 import '../../../nutrition/presentation/providers/diet_provider.dart';
 import '../../../nutrition/presentation/widgets/macros_chart.dart';
@@ -105,6 +108,71 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
     );
   }
 
+  bool get _isSuspended => _currentStudent.linkStatus == LinkStatus.suspended;
+
+  Future<void> _toggleSuspension() async {
+    final suspend = !_isSuspended;
+    try {
+      await ref
+          .read(trainerDashboardProvider.notifier)
+          .setSuspended(_currentStudent, suspend);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(suspend
+            ? 'Acesso de ${_currentStudent.name} suspenso.'
+            : 'Acesso de ${_currentStudent.name} reativado.'),
+        backgroundColor: AppColors.success,
+      ));
+    } on FirebaseException catch (e) {
+      _showError('Erro: ${e.message}');
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    // Espera o menu fechar antes de abrir o diálogo.
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Excluir aluno', style: AppTextStyles.headlineSmall),
+        content: Text(
+          'Isso apaga ${_currentStudent.name} e TODOS os dados dele '
+          '(treinos, histórico, avaliações). Não dá para desfazer.',
+          style: AppTextStyles.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final navigator = Navigator.of(context);
+    try {
+      await ref
+          .read(trainerDashboardProvider.notifier)
+          .deleteStudent(_currentStudent);
+      navigator.pop();
+    } on FirebaseFunctionsException catch (e) {
+      _showError(e.message ?? 'Erro ao excluir.');
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
+    );
+  }
+
   Widget _buildAppBar() {
     return SliverAppBar(
       expandedHeight: 280,
@@ -115,6 +183,13 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
+        if (!_currentStudent.hasAccount &&
+            _currentStudent.linkStatus != LinkStatus.archived)
+          IconButton(
+            tooltip: 'Enviar convite',
+            icon: const Icon(Icons.send_to_mobile, color: AppColors.lightTeal),
+            onPressed: () => showInviteShareSheet(context, _currentStudent),
+          ),
         IconButton(
           icon: const Icon(Icons.edit, color: AppColors.textPrimary),
           onPressed: () {
@@ -132,18 +207,22 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
           color: AppColors.surface,
           itemBuilder: (context) => [
             PopupMenuItem(
+              onTap: _toggleSuspension,
               child: Row(
                 children: [
-                  const Icon(Icons.block, color: AppColors.error, size: 20),
+                  Icon(
+                    _isSuspended ? Icons.lock_open : Icons.block,
+                    color: _isSuspended ? AppColors.success : AppColors.error,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
-                  Text('Suspender', style: AppTextStyles.bodyMedium),
+                  Text(_isSuspended ? 'Reativar' : 'Suspender',
+                      style: AppTextStyles.bodyMedium),
                 ],
               ),
-              onTap: () {
-                // TODO: Implementar suspensão
-              },
             ),
             PopupMenuItem(
+              onTap: _confirmDelete,
               child: Row(
                 children: [
                   const Icon(Icons.delete, color: AppColors.error, size: 20),
@@ -151,9 +230,6 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                   Text('Excluir', style: AppTextStyles.bodyMedium),
                 ],
               ),
-              onTap: () {
-                // TODO: Implementar exclusão
-              },
             ),
           ],
         ),

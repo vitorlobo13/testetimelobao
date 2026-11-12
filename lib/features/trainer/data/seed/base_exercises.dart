@@ -1,0 +1,142 @@
+// Lista base de exercícios copiada para o catálogo de cada personal no
+// primeiro acesso. Depois disso cada personal edita, apaga e cria os seus.
+// Formato: (nome, categoria, músculo principal, equipamento, dificuldade)
+
+typedef BaseExercise = (String, String, String, String, String);
+
+const String _ini = 'Iniciante';
+const String _int = 'Intermediário';
+const String _ava = 'Avançado';
+
+const List<BaseExercise> kBaseExercises = [
+  // PEITO
+  ('Supino Reto com Barra', 'Peito', 'Peitoral Maior', 'Barra', _int),
+  ('Supino Reto com Halteres', 'Peito', 'Peitoral Maior', 'Halteres', _int),
+  ('Supino Inclinado com Barra', 'Peito', 'Peitoral Superior', 'Barra', _int),
+  ('Supino Inclinado com Halteres', 'Peito', 'Peitoral Superior', 'Halteres', _int),
+  ('Supino Declinado com Barra', 'Peito', 'Peitoral Inferior', 'Barra', _int),
+  ('Supino na Máquina', 'Peito', 'Peitoral Maior', 'Máquina', _ini),
+  ('Supino no Smith', 'Peito', 'Peitoral Maior', 'Smith', _ini),
+  ('Crucifixo Reto com Halteres', 'Peito', 'Peitoral Maior', 'Halteres', _ini),
+  ('Crucifixo Inclinado com Halteres', 'Peito', 'Peitoral Superior', 'Halteres', _ini),
+  ('Crucifixo na Máquina (Peck Deck)', 'Peito', 'Peitoral Maior', 'Máquina', _ini),
+  ('Crossover Polia Alta', 'Peito', 'Peitoral Inferior', 'Polia', _int),
+  ('Crossover Polia Baixa', 'Peito', 'Peitoral Superior', 'Polia', _int),
+  ('Flexão de Braço', 'Peito', 'Peitoral Maior', 'Peso Corporal', _ini),
+  ('Flexão de Braço Inclinada', 'Peito', 'Peitoral Inferior', 'Peso Corporal', _ini),
+  ('Paralelas (Mergulho)', 'Peito', 'Peitoral Inferior', 'Paralelas', _ava),
+  ('Pullover com Halter', 'Peito', 'Peitoral / Dorsal', 'Halteres', _int),
+
+  // COSTAS
+  ('Barra Fixa Pronada', 'Costas', 'Dorsal', 'Barra Fixa', _ava),
+  ('Barra Fixa Supinada', 'Costas', 'Dorsal / Bíceps', 'Barra Fixa', _ava),
+  ('Puxada Frontal Aberta', 'Costas', 'Dorsal', 'Polia', _ini),
+  ('Puxada Frontal Triângulo', 'Costas', 'Dorsal', 'Polia', _ini),
+  ('Puxada Supinada', 'Costas', 'Dorsal / Bíceps', 'Polia', _ini),
+  ('Remada Curvada com Barra', 'Costas', 'Dorsal / Romboides', 'Barra', _int),
+  ('Remada Curvada Supinada', 'Costas', 'Dorsal', 'Barra', _int),
+  ('Remada Unilateral com Halter (Serrote)', 'Costas', 'Dorsal', 'Halteres', _ini),
+  ('Remada Baixa Triângulo', 'Costas', 'Dorsal / Romboides', 'Polia', _ini),
+  ('Remada Baixa Aberta', 'Costas', 'Romboides / Trapézio Médio', 'Polia', _ini),
+  ('Remada Cavalinho (T-Bar)', 'Costas', 'Dorsal', 'Barra T', _int),
+  ('Remada na Máquina', 'Costas', 'Dorsal', 'Máquina', _ini),
+  ('Pulldown com Corda', 'Costas', 'Dorsal', 'Polia', _ini),
+  ('Levantamento Terra', 'Costas', 'Eretores / Posterior', 'Barra', _ava),
+  ('Hiperextensão Lombar', 'Costas', 'Eretores da Espinha', 'Banco Romano', _ini),
+  ('Encolhimento com Halteres', 'Costas', 'Trapézio Superior', 'Halteres', _ini),
+  ('Encolhimento com Barra', 'Costas', 'Trapézio Superior', 'Barra', _ini),
+
+  // OMBROS
+  ('Desenvolvimento com Halteres', 'Ombros', 'Deltoide Anterior', 'Halteres', _int),
+  ('Desenvolvimento com Barra', 'Ombros', 'Deltoide Anterior', 'Barra', _int),
+  ('Desenvolvimento na Máquina', 'Ombros', 'Deltoide Anterior', 'Máquina', _ini),
+  ('Desenvolvimento Arnold', 'Ombros', 'Deltoides', 'Halteres', _int),
+  ('Elevação Lateral com Halteres', 'Ombros', 'Deltoide Lateral', 'Halteres', _ini),
+  ('Elevação Lateral na Polia', 'Ombros', 'Deltoide Lateral', 'Polia', _ini),
+  ('Elevação Lateral na Máquina', 'Ombros', 'Deltoide Lateral', 'Máquina', _ini),
+  ('Elevação Frontal com Halteres', 'Ombros', 'Deltoide Anterior', 'Halteres', _ini),
+  ('Elevação Frontal com Anilha', 'Ombros', 'Deltoide Anterior', 'Anilha', _ini),
+  ('Crucifixo Invertido com Halteres', 'Ombros', 'Deltoide Posterior', 'Halteres', _ini),
+  ('Crucifixo Invertido na Máquina', 'Ombros', 'Deltoide Posterior', 'Máquina', _ini),
+  ('Face Pull', 'Ombros', 'Deltoide Posterior', 'Polia', _int),
+  ('Remada Alta', 'Ombros', 'Deltoide Lateral / Trapézio', 'Barra', _int),
+
+  // BÍCEPS
+  ('Rosca Direta com Barra', 'Bíceps', 'Bíceps Braquial', 'Barra', _ini),
+  ('Rosca Direta com Barra W', 'Bíceps', 'Bíceps Braquial', 'Barra W', _ini),
+  ('Rosca Alternada com Halteres', 'Bíceps', 'Bíceps Braquial', 'Halteres', _ini),
+  ('Rosca Martelo', 'Bíceps', 'Braquial / Braquiorradial', 'Halteres', _ini),
+  ('Rosca Concentrada', 'Bíceps', 'Bíceps Braquial', 'Halteres', _ini),
+  ('Rosca Scott com Barra W', 'Bíceps', 'Bíceps Braquial', 'Banco Scott', _int),
+  ('Rosca Scott na Máquina', 'Bíceps', 'Bíceps Braquial', 'Máquina', _ini),
+  ('Rosca na Polia Baixa', 'Bíceps', 'Bíceps Braquial', 'Polia', _ini),
+  ('Rosca Inclinada com Halteres', 'Bíceps', 'Bíceps (cabeça longa)', 'Halteres', _int),
+  ('Rosca Inversa', 'Bíceps', 'Braquiorradial', 'Barra', _int),
+
+  // TRÍCEPS
+  ('Tríceps Pulley com Barra', 'Tríceps', 'Tríceps Braquial', 'Polia', _ini),
+  ('Tríceps Pulley com Corda', 'Tríceps', 'Tríceps Braquial', 'Polia', _ini),
+  ('Tríceps Testa com Barra W', 'Tríceps', 'Tríceps Braquial', 'Barra W', _int),
+  ('Tríceps Francês com Halter', 'Tríceps', 'Tríceps (cabeça longa)', 'Halteres', _int),
+  ('Tríceps Francês na Polia', 'Tríceps', 'Tríceps (cabeça longa)', 'Polia', _int),
+  ('Tríceps Coice com Halter', 'Tríceps', 'Tríceps Braquial', 'Halteres', _ini),
+  ('Tríceps Banco (Mergulho no Banco)', 'Tríceps', 'Tríceps Braquial', 'Banco', _ini),
+  ('Supino Fechado', 'Tríceps', 'Tríceps / Peitoral', 'Barra', _int),
+  ('Tríceps na Máquina', 'Tríceps', 'Tríceps Braquial', 'Máquina', _ini),
+
+  // PERNAS
+  ('Agachamento Livre', 'Pernas', 'Quadríceps / Glúteos', 'Barra', _int),
+  ('Agachamento no Smith', 'Pernas', 'Quadríceps / Glúteos', 'Smith', _ini),
+  ('Agachamento Frontal', 'Pernas', 'Quadríceps', 'Barra', _ava),
+  ('Agachamento Sumô com Halter', 'Pernas', 'Adutores / Glúteos', 'Halteres', _ini),
+  ('Agachamento Búlgaro', 'Pernas', 'Quadríceps / Glúteos', 'Halteres', _int),
+  ('Agachamento Hack', 'Pernas', 'Quadríceps', 'Máquina', _int),
+  ('Leg Press 45°', 'Pernas', 'Quadríceps / Glúteos', 'Máquina', _ini),
+  ('Leg Press Horizontal', 'Pernas', 'Quadríceps', 'Máquina', _ini),
+  ('Cadeira Extensora', 'Pernas', 'Quadríceps', 'Máquina', _ini),
+  ('Mesa Flexora', 'Pernas', 'Posterior de Coxa', 'Máquina', _ini),
+  ('Cadeira Flexora', 'Pernas', 'Posterior de Coxa', 'Máquina', _ini),
+  ('Flexora em Pé', 'Pernas', 'Posterior de Coxa', 'Máquina', _ini),
+  ('Stiff com Barra', 'Pernas', 'Posterior / Glúteos', 'Barra', _int),
+  ('Stiff com Halteres', 'Pernas', 'Posterior / Glúteos', 'Halteres', _int),
+  ('Levantamento Terra Romeno', 'Pernas', 'Posterior / Glúteos', 'Barra', _int),
+  ('Afundo com Halteres', 'Pernas', 'Quadríceps / Glúteos', 'Halteres', _ini),
+  ('Passada (Avanço)', 'Pernas', 'Quadríceps / Glúteos', 'Halteres', _int),
+  ('Elevação Pélvica com Barra', 'Pernas', 'Glúteo Máximo', 'Barra', _int),
+  ('Elevação Pélvica na Máquina', 'Pernas', 'Glúteo Máximo', 'Máquina', _ini),
+  ('Glúteo na Polia (Coice)', 'Pernas', 'Glúteo Máximo', 'Polia', _ini),
+  ('Glúteo 4 Apoios', 'Pernas', 'Glúteo Máximo', 'Caneleira', _ini),
+  ('Cadeira Abdutora', 'Pernas', 'Glúteo Médio', 'Máquina', _ini),
+  ('Cadeira Adutora', 'Pernas', 'Adutores', 'Máquina', _ini),
+  ('Abdução na Polia', 'Pernas', 'Glúteo Médio', 'Polia', _ini),
+  ('Panturrilha em Pé na Máquina', 'Pernas', 'Gastrocnêmio', 'Máquina', _ini),
+  ('Panturrilha Sentado', 'Pernas', 'Sóleo', 'Máquina', _ini),
+  ('Panturrilha no Leg Press', 'Pernas', 'Gastrocnêmio', 'Máquina', _ini),
+  ('Step Up (Subida no Banco)', 'Pernas', 'Quadríceps / Glúteos', 'Banco', _ini),
+
+  // ABDÔMEN
+  ('Abdominal Supra (Crunch)', 'Abdômen', 'Reto Abdominal', 'Peso Corporal', _ini),
+  ('Abdominal Infra', 'Abdômen', 'Reto Abdominal (inferior)', 'Peso Corporal', _ini),
+  ('Abdominal Oblíquo', 'Abdômen', 'Oblíquos', 'Peso Corporal', _ini),
+  ('Abdominal na Máquina', 'Abdômen', 'Reto Abdominal', 'Máquina', _ini),
+  ('Abdominal na Polia (Ajoelhado)', 'Abdômen', 'Reto Abdominal', 'Polia', _int),
+  ('Prancha Frontal', 'Abdômen', 'Core', 'Peso Corporal', _ini),
+  ('Prancha Lateral', 'Abdômen', 'Oblíquos', 'Peso Corporal', _ini),
+  ('Elevação de Pernas na Barra', 'Abdômen', 'Reto Abdominal (inferior)', 'Barra Fixa', _ava),
+  ('Elevação de Pernas no Banco', 'Abdômen', 'Reto Abdominal (inferior)', 'Banco', _ini),
+  ('Abdominal Bicicleta', 'Abdômen', 'Oblíquos', 'Peso Corporal', _ini),
+  ('Abdominal Remador', 'Abdômen', 'Reto Abdominal', 'Peso Corporal', _int),
+  ('Roda Abdominal', 'Abdômen', 'Core', 'Roda', _ava),
+
+  // CARDIO
+  ('Esteira (Caminhada)', 'Cardio', 'Cardiorrespiratório', 'Esteira', _ini),
+  ('Esteira (Corrida)', 'Cardio', 'Cardiorrespiratório', 'Esteira', _int),
+  ('Bicicleta Ergométrica', 'Cardio', 'Cardiorrespiratório', 'Bicicleta', _ini),
+  ('Elíptico (Transport)', 'Cardio', 'Cardiorrespiratório', 'Elíptico', _ini),
+  ('Escada (Simulador)', 'Cardio', 'Cardiorrespiratório', 'Escada', _int),
+  ('Remo Ergômetro', 'Cardio', 'Cardiorrespiratório', 'Remo', _int),
+  ('Pular Corda', 'Cardio', 'Cardiorrespiratório', 'Corda', _int),
+  ('Polichinelo', 'Cardio', 'Cardiorrespiratório', 'Peso Corporal', _ini),
+  ('Burpee', 'Cardio', 'Corpo Inteiro', 'Peso Corporal', _ava),
+  ('Mountain Climber', 'Cardio', 'Core / Cardio', 'Peso Corporal', _int),
+];

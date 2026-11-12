@@ -121,6 +121,60 @@ class AuthRepository {
     return profile;
   }
 
+  /// Cadastro do aluno a partir do convite do personal: cria a conta e
+  /// aceita o convite (vale mesmo com o cadastro aberto desligado).
+  Future<UserEntity> signUpWithInvite({
+    required String token,
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    final UserCredential credential;
+    try {
+      credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure(_translate(e));
+    }
+
+    final user = credential.user!;
+    try {
+      await user.updateDisplayName(name);
+      await _acceptInvite(token);
+    } on AuthFailure {
+      await user.delete();
+      rethrow;
+    }
+
+    final profile = await loadProfile(user, forceRefresh: true);
+    if (profile == null) {
+      throw const AuthFailure('Conta criada, mas o acesso não foi liberado.');
+    }
+    return profile;
+  }
+
+  /// Aluno já logado aceita um convite (ex.: trocou de personal).
+  Future<UserEntity> acceptInviteAsCurrentUser(String token) async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthFailure('Faça login para aceitar o convite.');
+    await _acceptInvite(token);
+    final profile = await loadProfile(user, forceRefresh: true);
+    if (profile == null) throw const AuthFailure('Acesso não liberado.');
+    return profile;
+  }
+
+  Future<void> _acceptInvite(String token) async {
+    try {
+      await _functions
+          .httpsCallable('acceptStudentInvite')
+          .call<void>({'token': token});
+    } on FirebaseFunctionsException catch (e) {
+      throw AuthFailure(e.message ?? 'Não foi possível aceitar o convite.');
+    }
+  }
+
   Future<void> sendPasswordReset(String email) async {
     try {
       await _auth.setLanguageCode('pt');

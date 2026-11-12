@@ -91,8 +91,8 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.video_library,
-                    title: 'Vídeos de Exercícios',
-                    subtitle: '+1800 vídeos',
+                    title: 'Meus Exercícios',
+                    subtitle: 'Catálogo e vídeos',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.popUntil(context, (route) => route.isFirst);

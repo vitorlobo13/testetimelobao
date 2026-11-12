@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -6,6 +7,7 @@ import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../domain/entities/student_entity.dart';
 import '../providers/trainer_provider.dart';
+import '../../../invite/presentation/widgets/invite_share_sheet.dart';
 
 /// Tela de cadastro / edição de aluno
 class AddStudentPage extends ConsumerStatefulWidget {
@@ -188,7 +190,8 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
               // Botão Cadastrar
               CustomButton(
                 text: widget.student != null ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR ALUNO',
-                onPressed: _saveStudent,
+                onPressed: _saving ? null : _saveStudent,
+                isLoading: _saving,
                 type: ButtonType.primary,
                 icon: widget.student != null ? Icons.save : Icons.person_add,
               ),
@@ -335,54 +338,74 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
     );
   }
 
-  void _saveStudent() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final double? weight = double.tryParse(_weightController.text);
-      final double? height = double.tryParse(_heightController.text);
-      final int? age = int.tryParse(_ageController.text);
-      final double fee = double.tryParse(_monthlyFeeController.text) ?? 0.0;
+  bool _saving = false;
 
-      final isEditing = widget.student != null;
+  Future<void> _saveStudent() async {
+    if (_saving || !(_formKey.currentState?.validate() ?? false)) return;
 
-      final savedStudent = StudentEntity(
-        id: isEditing ? widget.student!.id : DateTime.now().millisecondsSinceEpoch.toString(),
-        trainerId: isEditing ? widget.student!.trainerId : 'trainer_123',
-        name: _nameController.text,
-        email: _emailController.text,
-        phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
-        enrollmentDate: isEditing ? widget.student!.enrollmentDate : DateTime.now(),
-        isActive: isEditing ? widget.student!.isActive : true,
-        status: isEditing ? widget.student!.status : StudentStatus.active,
-        weight: weight,
-        height: height,
-        age: age,
-        gender: _selectedGender,
-        planType: _selectedPlan,
-        monthlyFee: fee,
-        nextPaymentDate: isEditing 
-            ? widget.student!.nextPaymentDate 
-            : DateTime.now().add(const Duration(days: 30)),
-        paymentStatus: _paymentStatus,
-        lastWorkoutDate: isEditing ? widget.student!.lastWorkoutDate : null,
-        totalWorkouts: isEditing ? widget.student!.totalWorkouts : 0,
-      );
+    final double? weight = double.tryParse(_weightController.text);
+    final double? height = double.tryParse(_heightController.text);
+    final int? age = int.tryParse(_ageController.text);
+    final double fee = double.tryParse(_monthlyFeeController.text) ?? 0.0;
 
+    final isEditing = widget.student != null;
+    final existing = widget.student;
+
+    final savedStudent = StudentEntity(
+      id: existing?.id ?? '',
+      trainerId: existing?.trainerId ?? '',
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
+      enrollmentDate: existing?.enrollmentDate ?? DateTime.now(),
+      isActive: existing?.isActive ?? true,
+      status: existing?.status ?? StudentStatus.active,
+      weight: weight,
+      height: height,
+      age: age,
+      gender: _selectedGender,
+      planType: _selectedPlan,
+      monthlyFee: fee,
+      nextPaymentDate: existing?.nextPaymentDate ??
+          DateTime.now().add(const Duration(days: 30)),
+      paymentStatus: _paymentStatus,
+      lastWorkoutDate: existing?.lastWorkoutDate,
+      totalWorkouts: existing?.totalWorkouts ?? 0,
+      studentUid: existing?.studentUid,
+      linkStatus: existing?.linkStatus ?? LinkStatus.pending,
+    );
+
+    setState(() => _saving = true);
+    final notifier = ref.read(trainerDashboardProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
       if (isEditing) {
-        ref.read(trainerDashboardProvider.notifier).updateStudent(savedStudent);
-      } else {
-        ref.read(trainerDashboardProvider.notifier).addStudent(savedStudent);
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isEditing 
-              ? 'Dados de "${savedStudent.name}" atualizados com sucesso!'
-              : 'Aluno "${savedStudent.name}" cadastrado com sucesso!'),
+        await notifier.updateStudent(savedStudent);
+        messenger.showSnackBar(SnackBar(
+          content: Text('Dados de "${savedStudent.name}" atualizados com sucesso!'),
           backgroundColor: AppColors.success,
-        ),
-      );
-
-      Navigator.of(context).pop();
+        ));
+        navigator.pop();
+      } else {
+        final id = await notifier.addStudent(savedStudent);
+        messenger.showSnackBar(SnackBar(
+          content: Text('Aluno "${savedStudent.name}" cadastrado! Envie o convite.'),
+          backgroundColor: AppColors.success,
+        ));
+        // Já abre o convite para mandar no WhatsApp; ao fechar, volta.
+        if (mounted) {
+          await showInviteShareSheet(context, savedStudent.copyWith(id: id));
+        }
+        navigator.pop();
+      }
+    } on FirebaseException catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content: Text('Erro ao salvar: ${e.message}'),
+        backgroundColor: AppColors.error,
+      ));
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 }

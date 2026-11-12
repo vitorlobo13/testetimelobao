@@ -167,3 +167,144 @@ exports.setTrainerActive = onCall(async (request) => {
   await db.doc(`users/${uid}`).set({active}, {merge: true});
   return {active};
 });
+
+// ---------------------------------------------------------------------------
+// Alunos: convite por link, aceite e exclusão com dados
+// ---------------------------------------------------------------------------
+
+const crypto = require("crypto");
+const INVITE_DAYS = 7;
+
+async function requireOwnLink(request, linkId) {
+  const caller = requireAuth(request);
+  if (caller.token.role !== "trainer") {
+    throw new HttpsError("permission-denied", "Apenas personais podem fazer isso.");
+  }
+  const ref = db.doc(`studentLinks/${cleanString(linkId, "linkId")}`);
+  const snap = await ref.get();
+  if (!snap.exists || snap.get("trainerId") !== caller.uid) {
+    throw new HttpsError("not-found", "Aluno não encontrado.");
+  }
+  return {caller, ref, snap};
+}
+
+/** Personal gera (ou renova) o link de convite de um aluno pendente. */
+exports.createStudentInvite = onCall(async (request) => {
+  const {caller, ref, snap} = await requireOwnLink(request, request.data?.linkId);
+  if (snap.get("studentUid")) {
+    throw new HttpsError("failed-precondition", "Este aluno já aceitou o convite.");
+  }
+
+  const trainer = await db.doc(`users/${caller.uid}`).get();
+  const token = crypto.randomBytes(18).toString("base64url");
+  const expiresAt = new Date(Date.now() + INVITE_DAYS * 24 * 60 * 60 * 1000);
+
+  await db.doc(`invites/${token}`).set({
+    type: "student",
+    linkId: ref.id,
+    trainerId: caller.uid,
+    trainerName: trainer.get("name") || "Seu personal",
+    studentName: snap.get("name") || "",
+    email: snap.get("email") || "",
+    expiresAt,
+    usedAt: null,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await ref.update({lastInviteAt: FieldValue.serverTimestamp()});
+  return {token, expiresAt: expiresAt.toISOString()};
+});
+
+/** Dados públicos do convite, para a tela de aceite (sem login). */
+exports.getInvite = onCall(async (request) => {
+  const token = cleanString(request.data?.token, "token", {min: 10});
+  const snap = await db.doc(`invites/${token}`).get();
+  if (!snap.exists || snap.get("type") !== "student") {
+    return {valid: false, reason: "Convite não encontrado."};
+  }
+  if (snap.get("usedAt")) return {valid: false, reason: "Este convite já foi usado."};
+  if (snap.get("expiresAt").toDate() < new Date()) {
+    return {valid: false, reason: "Este convite expirou. Peça um novo ao seu personal."};
+  }
+  return {
+    valid: true,
+    trainerName: snap.get("trainerName"),
+    studentName: snap.get("studentName"),
+    email: snap.get("email"),
+  };
+});
+
+/**
+ * Aluno logado aceita o convite: vira "student" (se ainda não tinha papel),
+ * o vínculo fica ativo e qualquer vínculo ativo anterior com outro personal
+ * é arquivado — o histórico fica com o personal antigo.
+ */
+exports.acceptStudentInvite = onCall(async (request) => {
+  const caller = requireAuth(request);
+  const token = cleanString(request.data?.token, "token", {min: 10});
+
+  const user = await auth.getUser(caller.uid);
+  const currentRole = user.customClaims?.role;
+  if (currentRole && currentRole !== "student") {
+    throw new HttpsError(
+        "failed-precondition",
+        "Esta conta é de personal/admin. Use outro e-mail para entrar como aluno.",
+    );
+  }
+
+  const inviteRef = db.doc(`invites/${token}`);
+  const linkId = await db.runTransaction(async (tx) => {
+    const invite = await tx.get(inviteRef);
+    if (!invite.exists || invite.get("type") !== "student") {
+      throw new HttpsError("not-found", "Convite não encontrado.");
+    }
+    if (invite.get("usedAt")) {
+      throw new HttpsError("failed-precondition", "Este convite já foi usado.");
+    }
+    if (invite.get("expiresAt").toDate() < new Date()) {
+      throw new HttpsError("failed-precondition", "Este convite expirou.");
+    }
+
+    const linkRef = db.doc(`studentLinks/${invite.get("linkId")}`);
+    const link = await tx.get(linkRef);
+    if (!link.exists || link.get("studentUid")) {
+      throw new HttpsError("failed-precondition", "Este convite não está mais disponível.");
+    }
+
+    const previous = await tx.get(db.collection("studentLinks")
+        .where("studentUid", "==", caller.uid)
+        .where("linkStatus", "==", "active"));
+
+    previous.docs.forEach((doc) => tx.update(doc.ref, {
+      linkStatus: "archived",
+      isActive: false,
+      status: "inactive",
+      archivedAt: FieldValue.serverTimestamp(),
+    }));
+    tx.update(linkRef, {
+      studentUid: caller.uid,
+      linkStatus: "active",
+      acceptedAt: FieldValue.serverTimestamp(),
+    });
+    tx.update(inviteRef, {usedAt: FieldValue.serverTimestamp(), usedBy: caller.uid});
+    tx.set(db.doc(`users/${caller.uid}`), {
+      name: user.displayName || link.get("name") || "",
+      email: user.email,
+      role: "student",
+      active: true,
+      createdAt: FieldValue.serverTimestamp(),
+    }, {merge: true});
+    return linkRef.id;
+  });
+
+  if (!currentRole) await auth.setCustomUserClaims(caller.uid, {role: "student"});
+  return {linkId};
+});
+
+/** Personal exclui o aluno e todos os dados dele (subcoleções incluídas). */
+exports.deleteStudentLink = onCall(async (request) => {
+  const {ref} = await requireOwnLink(request, request.data?.linkId);
+  const invites = await db.collection("invites").where("linkId", "==", ref.id).get();
+  await Promise.all(invites.docs.map((d) => d.ref.delete()));
+  await db.recursiveDelete(ref);
+  return {deleted: true};
+});

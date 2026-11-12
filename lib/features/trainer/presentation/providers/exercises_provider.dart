@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/repositories/exercise_repository.dart';
 import '../../domain/entities/exercise_entity.dart';
 
 /// Estado da biblioteca de exercícios
@@ -26,44 +31,71 @@ class ExercisesState {
   }
 }
 
-/// Notifier de Exercícios - VERSÃO CORRIGIDA
+final exerciseRepositoryProvider =
+    Provider<ExerciseRepository>((ref) => ExerciseRepository());
+
+/// Catálogo de exercícios do personal logado (Firestore, tempo real).
+/// No primeiro acesso, copia a lista base de exercícios.
 class ExercisesNotifier extends Notifier<ExercisesState> {
+  StreamSubscription<List<ExerciseEntity>>? _subscription;
+
+  ExerciseRepository get _repository => ref.read(exerciseRepositoryProvider);
+  String? get _trainerId {
+    final user = ref.read(authProvider).user;
+    return (user != null && user.isTrainer) ? user.id : null;
+  }
+
   @override
   ExercisesState build() {
-    Future.microtask(() => loadExercises());
-    return const ExercisesState();
+    ref.onDispose(() => _subscription?.cancel());
+    ref.listen(authProvider.select((a) => a.user?.id), (_, __) => _listen());
+    Future.microtask(_listen);
+    return const ExercisesState(isLoading: true);
   }
 
-  /// Carrega biblioteca de exercícios
-  Future<void> loadExercises() async {
-    state = state.copyWith(isLoading: true);
-
-    try {
-      // TODO: Buscar do Firebase/Supabase
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Dados mockados (alguns exercícios populares)
-      final mockExercises = _generateMockExercises();
-
-      state = state.copyWith(
-        exercises: mockExercises,
-        isLoading: false,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Erro ao carregar exercícios',
-      );
+  Future<void> _listen() async {
+    await _subscription?.cancel();
+    _subscription = null;
+    final trainerId = _trainerId;
+    if (trainerId == null) {
+      state = const ExercisesState();
+      return;
     }
+    try {
+      await _repository.seedIfNeeded(trainerId);
+    } on Exception catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Erro: $e');
+      return;
+    }
+    _subscription = _repository.watch(trainerId).listen(
+          (list) => state = ExercisesState(exercises: list),
+          onError: (Object e) => state = state.copyWith(
+            isLoading: false,
+            errorMessage: 'Erro ao carregar exercícios: $e',
+          ),
+        );
   }
 
-  /// Atualiza um exercício na biblioteca (ex: para adicionar URL do vídeo)
-  void updateExercise(ExerciseEntity updatedExercise) {
-    final updatedList = state.exercises.map((e) {
-      return e.id == updatedExercise.id ? updatedExercise : e;
-    }).toList();
-    state = state.copyWith(exercises: updatedList);
+  /// Mantido por compatibilidade: os dados já chegam em tempo real.
+  Future<void> loadExercises() async {
+    if (_subscription == null) await _listen();
   }
+
+  String get _requireTrainer {
+    final id = _trainerId;
+    if (id == null) throw StateError('Personal não logado.');
+    return id;
+  }
+
+  Future<String> createExercise(ExerciseEntity exercise) =>
+      _repository.create(_requireTrainer, exercise);
+
+  /// Atualiza um exercício (nome, grupo, vídeo...)
+  Future<void> updateExercise(ExerciseEntity updatedExercise) =>
+      _repository.update(_requireTrainer, updatedExercise);
+
+  Future<void> deleteExercise(String exerciseId) =>
+      _repository.delete(_requireTrainer, exerciseId);
 
   /// Busca exercícios por nome ou categoria
   List<ExerciseEntity> search(String query, {String? category}) {
@@ -77,207 +109,16 @@ class ExercisesNotifier extends Notifier<ExercisesState> {
       final lowerQuery = query.toLowerCase();
       filtered = filtered.where((e) {
         return e.name.toLowerCase().contains(lowerQuery) ||
-               e.muscleGroup.toLowerCase().contains(lowerQuery) ||
-               e.category.toLowerCase().contains(lowerQuery);
+            e.muscleGroup.toLowerCase().contains(lowerQuery) ||
+            e.category.toLowerCase().contains(lowerQuery);
       }).toList();
     }
 
     return filtered;
   }
-
-  /// Gera exercícios mockados
-  List<ExerciseEntity> _generateMockExercises() {
-    return [
-      // PEITO
-      const ExerciseEntity(
-        id: '1',
-        name: 'Supino Reto com Barra',
-        category: ExerciseCategory.chest,
-        muscleGroup: 'Peitoral Maior',
-        equipment: 'Barra',
-        difficulty: 'Intermediário',
-        description: 'Exercício fundamental para desenvolvimento do peitoral',
-        videoUrl: 'https://youtube.com/watch?v=mocked_supino',
-      ),
-      const ExerciseEntity(
-        id: '2',
-        name: 'Supino Inclinado com Halteres',
-        category: ExerciseCategory.chest,
-        muscleGroup: 'Peitoral Superior',
-        equipment: 'Halteres',
-        difficulty: 'Intermediário',
-      ),
-      const ExerciseEntity(
-        id: '3',
-        name: 'Crucifixo no Banco Reto',
-        category: ExerciseCategory.chest,
-        muscleGroup: 'Peitoral Maior',
-        equipment: 'Halteres',
-        difficulty: 'Iniciante',
-      ),
-      const ExerciseEntity(
-        id: '4',
-        name: 'Flexão de Braço',
-        category: ExerciseCategory.chest,
-        muscleGroup: 'Peitoral',
-        equipment: 'Peso Corporal',
-        difficulty: 'Iniciante',
-      ),
-
-      // COSTAS
-      const ExerciseEntity(
-        id: '5',
-        name: 'Barra Fixa',
-        category: ExerciseCategory.back,
-        muscleGroup: 'Dorsal',
-        equipment: 'Barra Fixa',
-        difficulty: 'Intermediário',
-      ),
-      const ExerciseEntity(
-        id: '6',
-        name: 'Remada Curvada',
-        category: ExerciseCategory.back,
-        muscleGroup: 'Dorsal',
-        equipment: 'Barra',
-        difficulty: 'Intermediário',
-      ),
-      const ExerciseEntity(
-        id: '7',
-        name: 'Pulley Frontal',
-        category: ExerciseCategory.back,
-        muscleGroup: 'Dorsal',
-        equipment: 'Máquina',
-        difficulty: 'Iniciante',
-      ),
-      const ExerciseEntity(
-        id: '8',
-        name: 'Remada Unilateral',
-        category: ExerciseCategory.back,
-        muscleGroup: 'Dorsal',
-        equipment: 'Halter',
-        difficulty: 'Iniciante',
-      ),
-
-      // PERNAS
-      const ExerciseEntity(
-        id: '9',
-        name: 'Agachamento Livre',
-        category: ExerciseCategory.legs,
-        muscleGroup: 'Quadríceps',
-        equipment: 'Barra',
-        difficulty: 'Avançado',
-        videoUrl: 'https://youtube.com/watch?v=mocked_agachamento',
-      ),
-      const ExerciseEntity(
-        id: '10',
-        name: 'Leg Press 45°',
-        category: ExerciseCategory.legs,
-        muscleGroup: 'Quadríceps',
-        equipment: 'Máquina',
-        difficulty: 'Iniciante',
-      ),
-      const ExerciseEntity(
-        id: '11',
-        name: 'Cadeira Extensora',
-        category: ExerciseCategory.legs,
-        muscleGroup: 'Quadríceps',
-        equipment: 'Máquina',
-        difficulty: 'Iniciante',
-      ),
-      const ExerciseEntity(
-        id: '12',
-        name: 'Mesa Flexora',
-        category: ExerciseCategory.legs,
-        muscleGroup: 'Posteriores',
-        equipment: 'Máquina',
-        difficulty: 'Iniciante',
-      ),
-
-      // OMBROS
-      const ExerciseEntity(
-        id: '13',
-        name: 'Desenvolvimento com Barra',
-        category: ExerciseCategory.shoulders,
-        muscleGroup: 'Deltóide',
-        equipment: 'Barra',
-        difficulty: 'Intermediário',
-      ),
-      const ExerciseEntity(
-        id: '14',
-        name: 'Elevação Lateral',
-        category: ExerciseCategory.shoulders,
-        muscleGroup: 'Deltóide Lateral',
-        equipment: 'Halteres',
-        difficulty: 'Iniciante',
-      ),
-      const ExerciseEntity(
-        id: '15',
-        name: 'Elevação Frontal',
-        category: ExerciseCategory.shoulders,
-        muscleGroup: 'Deltóide Anterior',
-        equipment: 'Halteres',
-        difficulty: 'Iniciante',
-      ),
-
-      // BÍCEPS
-      const ExerciseEntity(
-        id: '16',
-        name: 'Rosca Direta com Barra',
-        category: ExerciseCategory.biceps,
-        muscleGroup: 'Bíceps',
-        equipment: 'Barra',
-        difficulty: 'Iniciante',
-        videoUrl: 'https://youtube.com/watch?v=mocked_rosca_direta',
-      ),
-      const ExerciseEntity(
-        id: '17',
-        name: 'Rosca Alternada',
-        category: ExerciseCategory.biceps,
-        muscleGroup: 'Bíceps',
-        equipment: 'Halteres',
-        difficulty: 'Iniciante',
-      ),
-
-      // TRÍCEPS
-      const ExerciseEntity(
-        id: '18',
-        name: 'Tríceps Testa',
-        category: ExerciseCategory.triceps,
-        muscleGroup: 'Tríceps',
-        equipment: 'Barra',
-        difficulty: 'Intermediário',
-      ),
-      const ExerciseEntity(
-        id: '19',
-        name: 'Tríceps Corda',
-        category: ExerciseCategory.triceps,
-        muscleGroup: 'Tríceps',
-        equipment: 'Polia',
-        difficulty: 'Iniciante',
-      ),
-
-      // ABDÔMEN
-      const ExerciseEntity(
-        id: '20',
-        name: 'Abdominal Supra',
-        category: ExerciseCategory.abs,
-        muscleGroup: 'Reto Abdominal',
-        equipment: 'Peso Corporal',
-        difficulty: 'Iniciante',
-      ),
-      const ExerciseEntity(
-        id: '21',
-        name: 'Prancha Isométrica',
-        category: ExerciseCategory.abs,
-        muscleGroup: 'Core',
-        equipment: 'Peso Corporal',
-        difficulty: 'Iniciante',
-      ),
-    ];
-  }
 }
 
-/// Provider global de exercícios - VERSÃO CORRIGIDA
-final exercisesProvider = NotifierProvider<ExercisesNotifier, ExercisesState>(() {
+final exercisesProvider =
+    NotifierProvider<ExercisesNotifier, ExercisesState>(() {
   return ExercisesNotifier();
 });

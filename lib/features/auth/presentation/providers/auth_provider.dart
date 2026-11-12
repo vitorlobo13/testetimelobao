@@ -129,6 +129,40 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  /// Aluno novo criando a conta pelo link de convite.
+  Future<bool> registerWithInvite({
+    required String token,
+    required String name,
+    required String email,
+    required String password,
+  }) =>
+      _runRegistration(() => _repository.signUpWithInvite(
+            token: token,
+            name: name,
+            email: email,
+            password: password,
+          ));
+
+  /// Aluno já logado aceitando um convite novo.
+  Future<bool> acceptInvite(String token) =>
+      _runRegistration(() => _repository.acceptInviteAsCurrentUser(token));
+
+  Future<bool> _runRegistration(Future<UserEntity> Function() action) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    _registering = true;
+    try {
+      final profile = await action();
+      state = AuthState(user: profile, isAuthenticated: true);
+      return true;
+    } on AuthFailure catch (e) {
+      // Mantém a sessão se o aluno já estava logado; só mostra o erro.
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      return false;
+    } finally {
+      _registering = false;
+    }
+  }
+
   Future<bool> sendPasswordReset(String email) async {
     try {
       await _repository.sendPasswordReset(email);

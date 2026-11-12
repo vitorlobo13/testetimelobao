@@ -7,6 +7,7 @@ import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/invite/presentation/pages/accept_invite_page.dart';
 import '../../features/student/presentation/pages/student_home_page.dart';
 import '../../features/trainer/presentation/pages/trainer_home_page.dart';
 import '../../splash/splash_screen.dart';
@@ -20,6 +21,7 @@ abstract final class AppRoutes {
   static const trainerHome = '/personal';
   static const studentHome = '/aluno';
   static const adminHome = '/admin';
+  static const invitePrefix = '/convite/';
 
   static const _public = {login, register};
 
@@ -42,6 +44,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = refresh.value;
       final location = state.matchedLocation;
+
+      // O link de convite abre para qualquer pessoa, logada ou não; a
+      // própria tela decide o que mostrar.
+      if (location.startsWith(AppRoutes.invitePrefix)) return null;
 
       if (auth.isInitializing) {
         return location == AppRoutes.splash ? null : AppRoutes.splash;
@@ -76,6 +82,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.studentHome,
         builder: (context, state) => const StudentHomePage(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.invitePrefix}:token',
+        builder: (context, state) =>
+            AcceptInvitePage(token: state.pathParameters['token']!),
       ),
       GoRoute(
         path: AppRoutes.adminHome,

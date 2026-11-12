@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "time-lobao-teste"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

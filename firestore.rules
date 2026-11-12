@@ -62,26 +62,33 @@ service cloud.firestore {
       function isLinkStudent() {
         return isStudent()
           && linkData().studentUid == request.auth.uid
-          && linkData().status == 'active';
+          && linkData().linkStatus == 'active';
       }
 
       allow read: if (isTrainer() && resource.data.trainerId == request.auth.uid)
         || (isStudent() && resource.data.studentUid == request.auth.uid
-            && resource.data.status == 'active');
+            && resource.data.linkStatus == 'active');
 
       // O personal cria o vínculo sem aluno; o aluno é ligado pela Function
       // de aceite do convite.
       allow create: if isTrainer()
         && request.resource.data.trainerId == request.auth.uid
-        && request.resource.data.get('studentUid', null) == null;
+        && request.resource.data.get('studentUid', null) == null
+        && request.resource.data.get('linkStatus', 'pending') == 'pending';
 
       allow update: if (isTrainer()
           && resource.data.trainerId == request.auth.uid
           && request.resource.data.trainerId == resource.data.trainerId
-          && request.resource.data.get('studentUid', null) == resource.data.get('studentUid', null))
+          && request.resource.data.get('studentUid', null) == resource.data.get('studentUid', null)
+          // vínculo arquivado (aluno foi para outro personal) não volta a ficar ativo,
+          // e um vínculo sem aluno não pode ser marcado como ativo
+          && (resource.data.get('linkStatus', 'pending') != 'archived'
+              || request.resource.data.get('linkStatus', 'pending') == 'archived')
+          && (request.resource.data.get('linkStatus', 'pending') != 'active'
+              || resource.data.get('studentUid', null) != null))
         || (isStudent()
           && resource.data.studentUid == request.auth.uid
-          && resource.data.status == 'active'
+          && resource.data.linkStatus == 'active'
           && onlyChanges(['consentAt', 'consentVersion']));
 
       allow delete: if isTrainer() && resource.data.trainerId == request.auth.uid;

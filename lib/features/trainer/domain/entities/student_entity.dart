@@ -27,6 +27,10 @@ class StudentEntity {
   final DateTime? lastWorkoutDate;
   final int totalWorkouts;
 
+  // Vínculo com a conta do aluno (preenchido quando ele aceita o convite)
+  final String? studentUid;
+  final LinkStatus linkStatus;
+
   const StudentEntity({
     required this.id,
     required this.trainerId,
@@ -48,7 +52,58 @@ class StudentEntity {
     this.currentWorkoutId,
     this.lastWorkoutDate,
     this.totalWorkouts = 0,
+    this.studentUid,
+    this.linkStatus = LinkStatus.pending,
   });
+
+  /// O aluno já aceitou o convite e tem conta no app.
+  bool get hasAccount => studentUid != null;
+
+  StudentEntity copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phone,
+    bool? isActive,
+    StudentStatus? status,
+    double? weight,
+    double? height,
+    int? age,
+    Gender? gender,
+    String? planType,
+    double? monthlyFee,
+    DateTime? nextPaymentDate,
+    PaymentStatus? paymentStatus,
+    String? currentWorkoutId,
+    DateTime? lastWorkoutDate,
+    int? totalWorkouts,
+    LinkStatus? linkStatus,
+  }) {
+    return StudentEntity(
+      id: id ?? this.id,
+      trainerId: trainerId,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      photoUrl: photoUrl,
+      enrollmentDate: enrollmentDate,
+      isActive: isActive ?? this.isActive,
+      status: status ?? this.status,
+      weight: weight ?? this.weight,
+      height: height ?? this.height,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      planType: planType ?? this.planType,
+      monthlyFee: monthlyFee ?? this.monthlyFee,
+      nextPaymentDate: nextPaymentDate ?? this.nextPaymentDate,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      currentWorkoutId: currentWorkoutId ?? this.currentWorkoutId,
+      lastWorkoutDate: lastWorkoutDate ?? this.lastWorkoutDate,
+      totalWorkouts: totalWorkouts ?? this.totalWorkouts,
+      studentUid: studentUid,
+      linkStatus: linkStatus ?? this.linkStatus,
+    );
+  }
 
   /// Calcula IMC
   double? get bmi {
@@ -69,6 +124,14 @@ class StudentEntity {
     if (lastWorkoutDate == null) return null;
     return DateTime.now().difference(lastWorkoutDate!).inDays;
   }
+}
+
+/// Situação do vínculo aluno ↔ personal (controla o acesso do aluno)
+enum LinkStatus {
+  pending,   // Convite ainda não aceito
+  active,    // Aluno com acesso ao app
+  suspended, // Acesso bloqueado pelo personal
+  archived,  // Aluno passou para outro personal (histórico preservado)
 }
 
 /// Status do aluno

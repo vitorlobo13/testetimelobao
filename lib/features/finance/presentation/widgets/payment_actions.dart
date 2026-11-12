@@ -50,8 +50,8 @@ Future<void> chargeOnWhatsApp(BuildContext context, StudentEntity s,
   final due = s.nextPaymentDate == null ? '' : ' (vencimento ${_day.format(s.nextPaymentDate!)})';
   final days = s.daysUntilDue ?? 0;
   final intro = days < 0
-      ? 'consta em aberto a sua mensalidade$amount$due.'
-      : 'passando para lembrar da sua mensalidade$amount$due.';
+      ? 'Consta em aberto a sua mensalidade$amount$due.'
+      : 'Passando para lembrar da sua mensalidade$amount$due.';
   final sign = (trainerName == null || trainerName.isEmpty) ? '' : '\n$trainerName';
   final text = 'Olá, $firstName! Tudo bem? $intro '
       'Qualquer dúvida é só me chamar. Obrigado!$sign';

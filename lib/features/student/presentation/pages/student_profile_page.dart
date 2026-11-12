@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -7,6 +8,8 @@ import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../trainer/domain/entities/physical_measurement_entity.dart';
 import '../../../trainer/presentation/providers/physical_measurement_provider.dart';
+import '../providers/student_workout_provider.dart';
+import '../widgets/student_evolution_section.dart';
 
 /// Notifier de estado para o perfil do aluno
 class StudentProfileState {
@@ -54,14 +57,18 @@ class StudentProfileState {
 class StudentProfileNotifier extends Notifier<StudentProfileState> {
   @override
   StudentProfileState build() {
-    // Dados iniciais mockados para o aluno logado
-    return const StudentProfileState(
-      weight: 78.5,
-      height: 176.0,
-      age: 26,
-      phone: '(11) 99876-5432',
-      planType: 'Semestral Premium',
-      trainerName: 'Rodrigo Lobão (Personal)',
+    // Dados reais: vínculo com o personal + última medida registrada.
+    final link = ref.watch(studentWorkoutProvider.select((s) => s.link));
+    final latest = link == null
+        ? null
+        : ref.watch(assessmentsProvider(link.linkId)).value?.firstOrNull;
+    return StudentProfileState(
+      weight: latest?.weight ?? link?.weight ?? 0,
+      height: latest?.height ?? link?.height ?? 0,
+      age: link?.age ?? 0,
+      phone: link?.phone ?? '',
+      planType: link?.planType ?? '—',
+      trainerName: link?.trainerName ?? 'Seu personal',
     );
   }
 
@@ -162,8 +169,8 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
               color: AppColors.textPrimary,
             ),
             onPressed: () {
-              if (profileState.isEditing) {
-                // Cancela e restaura valores anteriores
+              {
+                // Ao entrar ou cancelar a edição, carrega os valores atuais
                 _weightController.text = profileState.weight.toString();
                 _heightController.text = profileState.height.toString();
                 _ageController.text = profileState.age.toString();
@@ -190,6 +197,10 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
 
               // Dados Físicos e IMC
               _buildPhysicalSection(profileState),
+              const SizedBox(height: 16),
+
+              // Anamnese pendente + histórico de evolução (Firestore)
+              const StudentEvolutionSection(),
               const SizedBox(height: 16),
 
               // Perímetros — somente no modo edição
@@ -599,10 +610,22 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
 
       // Registra nova entrada no histórico de medidas físicas
       // para que o professor possa visualizar a evolução.
-      final userId = ref.read(authProvider).user?.id ?? 'student_mock';
+      final link = ref.read(studentWorkoutProvider).link;
+      if (link == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Você ainda não está vinculado a um personal.'),
+        ));
+        return;
+      }
+      final uid = ref.read(authProvider).user?.id;
+      if (uid != null && phone.trim().isNotEmpty) {
+        FirebaseFirestore.instance
+            .doc('users/$uid')
+            .update({'phone': phone.trim(), 'updatedAt': FieldValue.serverTimestamp()});
+      }
       final measurement = PhysicalMeasurementEntity(
-        id: '${userId}_${DateTime.now().millisecondsSinceEpoch}',
-        studentId: userId,
+        id: '',
+        studentId: link.linkId,
         recordedAt: DateTime.now(),
         weight: weight,
         height: height,

@@ -26,8 +26,12 @@ class StudentLinkRepository {
       .map((snap) => snap.docs.map(StudentLinkModel.fromDoc).toList()
         ..sort((a, b) => b.enrollmentDate.compareTo(a.enrollmentDate)));
 
-  Future<String> create(StudentEntity student, String trainerId) async {
-    final ref = await _links.add(StudentLinkModel.toNewMap(student, trainerId));
+  Future<String> create(StudentEntity student, String trainerId,
+      {String? trainerName}) async {
+    final ref = await _links.add({
+      ...StudentLinkModel.toNewMap(student, trainerId),
+      'trainerName': trainerName,
+    });
     return ref.id;
   }
 

@@ -17,6 +17,23 @@ service firebase.storage {
       allow delete: if isTrainer() && request.auth.uid == trainerId;
     }
 
+    // Fotos de evolução: só o personal do vínculo e o aluno com vínculo ativo.
+    match /studentLinks/{linkId}/photos/{file} {
+      function link() {
+        return firestore.get(/databases/(default)/documents/studentLinks/$(linkId)).data;
+      }
+      function canAccess() {
+        return signedIn() && (
+          link().trainerId == request.auth.uid ||
+          (link().studentUid == request.auth.uid && link().linkStatus == 'active'));
+      }
+      allow read: if canAccess();
+      allow create: if canAccess()
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if signedIn() && link().trainerId == request.auth.uid;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

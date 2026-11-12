@@ -8,10 +8,22 @@ class ActiveLink {
     required this.linkId,
     required this.trainerId,
     this.consentAt,
+    this.trainerName,
+    this.planType,
+    this.phone,
+    this.age,
+    this.weight,
+    this.height,
   });
   final String linkId;
   final String trainerId;
   final DateTime? consentAt;
+  final String? trainerName;
+  final String? planType;
+  final String? phone;
+  final int? age;
+  final double? weight;
+  final double? height;
 }
 
 /// Treinos executados (`studentLinks/{id}/sessions`). O aluno grava a
@@ -41,6 +53,12 @@ class SessionRepository {
           linkId: snap.docs.first.id,
           trainerId: d['trainerId'] as String? ?? '',
           consentAt: consent is Timestamp ? consent.toDate() : null,
+          trainerName: d['trainerName'] as String?,
+          planType: d['planType'] as String?,
+          phone: d['phone'] as String?,
+          age: (d['age'] as num?)?.toInt(),
+          weight: (d['weight'] as num?)?.toDouble(),
+          height: (d['height'] as num?)?.toDouble(),
         );
       });
 

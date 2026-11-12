@@ -101,6 +101,18 @@ service cloud.firestore {
         allow delete: if ownsLink();
       }
 
+      // O aluno registra as próprias medidas (nunca edita/apaga as do personal).
+      match /assessments/{assessmentId} {
+        allow create: if isLinkStudent()
+          && request.resource.data.recordedBy == 'student';
+      }
+
+      // O aluno responde a anamnese enviada pelo personal.
+      match /anamnese/{docId} {
+        allow update: if isLinkStudent()
+          && onlyChanges(['answers', 'answeredAt']);
+      }
+
       // Treinos, avaliações, anamnese, dietas e pagamentos: o personal
       // escreve, o aluno do vínculo ativo só lê.
       match /{collection}/{docId} {

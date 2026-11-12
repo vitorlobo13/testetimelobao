@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../../data/repositories/assessment_repository.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
@@ -34,10 +36,20 @@ class _AnamnesePageState extends ConsumerState<AnamnesePage> {
     super.dispose();
   }
 
+  bool _formEdited = false;
+  List<String>? _loadedQuestions;
+
   void _initQuestionControllers(List<String> questions) {
-    // Apenas inicializa se estiver vazio para não perder foco durante rebuilds
-    if (_questionControllers.isEmpty) {
-      _questionControllers = questions.map((q) => TextEditingController(text: q)).toList();
+    // Recarrega quando o formulário salvo chega do Firebase, desde que o
+    // personal ainda não tenha começado a editar.
+    if (_questionControllers.isEmpty ||
+        (!_formEdited && _loadedQuestions != questions)) {
+      for (final c in _questionControllers) {
+        c.dispose();
+      }
+      _questionControllers =
+          questions.map((q) => TextEditingController(text: q)).toList();
+      _loadedQuestions = questions;
     }
   }
 
@@ -48,6 +60,7 @@ class _AnamnesePageState extends ConsumerState<AnamnesePage> {
         .toList();
 
     ref.read(anamneseProvider.notifier).saveQuestions(updatedQuestions);
+    _formEdited = false;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -59,12 +72,14 @@ class _AnamnesePageState extends ConsumerState<AnamnesePage> {
 
   void _addQuestion() {
     setState(() {
+      _formEdited = true;
       _questionControllers.add(TextEditingController());
     });
   }
 
   void _removeQuestion(int index) {
     setState(() {
+      _formEdited = true;
       _questionControllers[index].dispose();
       _questionControllers.removeAt(index);
     });
@@ -152,11 +167,55 @@ class _AnamnesePageState extends ConsumerState<AnamnesePage> {
   }
 
   List<Widget> _buildStudentAnswersList(AnamneseState state) {
-    final answers = state.studentAnswers[_selectedStudent!.id] ?? {};
-    
-    if (answers.isEmpty) {
+    final student = _selectedStudent!;
+    final anamnese = ref.watch(studentAnamneseProvider(student.id)).value;
+    final format = DateFormat("dd/MM/yyyy 'às' HH:mm");
+
+    Future<void> send() async {
+      final messenger = ScaffoldMessenger.of(context);
+      await ref.read(anamneseProvider.notifier).sendToStudent(student.id);
+      messenger.showSnackBar(SnackBar(
+        content: Text(student.hasAccount
+            ? 'Anamnese enviada! ${student.name} vai ver no app para responder.'
+            : 'Anamnese pronta: ${student.name} responde assim que aceitar o convite.'),
+        backgroundColor: AppColors.success,
+      ));
+    }
+
+    final header = <Widget>[
+      if (anamnese?.answeredAt != null)
+        Text('Respondida em ${format.format(anamnese!.answeredAt!)}',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.success))
+      else if (anamnese?.sentAt != null)
+        Text('Enviada em ${format.format(anamnese!.sentAt!)} · aguardando resposta',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning)),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.send),
+              label: Text(anamnese == null ? 'Enviar ao aluno' : 'Reenviar formulário'),
+              onPressed: send,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.edit_note),
+              label: const Text('Preencher agora'),
+              onPressed: () => _fillWithStudent(student.id, anamnese, state),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+    ];
+
+    if (anamnese == null || anamnese.answers.isEmpty) {
       return [
-         Center(
+        ...header,
+        Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
@@ -169,10 +228,10 @@ class _AnamnesePageState extends ConsumerState<AnamnesePage> {
       ];
     }
 
-    final widgets = <Widget>[];
-    for (int i = 0; i < state.questions.length; i++) {
-      final question = state.questions[i];
-      final answer = answers[i] ?? 'Não respondido.';
+    final widgets = <Widget>[...header];
+    for (int i = 0; i < anamnese.questions.length; i++) {
+      final question = anamnese.questions[i];
+      final answer = anamnese.answers[i] ?? 'Não respondido.';
 
       widgets.add(
         Container(
@@ -201,6 +260,61 @@ class _AnamnesePageState extends ConsumerState<AnamnesePage> {
       );
     }
     return widgets;
+  }
+
+  /// Personal preenche a anamnese junto com o aluno (ex.: na academia).
+  Future<void> _fillWithStudent(
+      String linkId, StudentAnamnese? current, AnamneseState state) async {
+    final questions = (current?.questions.isNotEmpty ?? false)
+        ? current!.questions
+        : state.questions;
+    if (current == null || current.questions.isEmpty) {
+      await ref.read(anamneseProvider.notifier).sendToStudent(linkId);
+    }
+    if (!mounted) return;
+    final controllers = [
+      for (var i = 0; i < questions.length; i++)
+        TextEditingController(text: current?.answers[i] ?? ''),
+    ];
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      builder: (context) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            16, 16, 16, MediaQuery.viewInsetsOf(context).bottom + 16),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('PREENCHER ANAMNESE', style: AppTextStyles.headlineSmall),
+              const SizedBox(height: 12),
+              for (var i = 0; i < questions.length; i++) ...[
+                CustomTextField(
+                  label: questions[i],
+                  controller: controllers[i],
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+              ],
+              CustomButton(
+                text: 'SALVAR RESPOSTAS',
+                onPressed: () => Navigator.pop(context, true),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (saved == true) {
+      await ref.read(anamneseProvider.notifier).saveAnswers(linkId, {
+        for (var i = 0; i < controllers.length; i++)
+          if (controllers[i].text.trim().isNotEmpty) i: controllers[i].text.trim(),
+      });
+    }
+    for (final c in controllers) {
+      c.dispose();
+    }
   }
 
   Widget _buildEditFormView() {

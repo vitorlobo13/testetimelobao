@@ -102,7 +102,11 @@ class TrainerDashboardNotifier extends Notifier<TrainerDashboardState> {
   Future<String> addStudent(StudentEntity newStudent) {
     final trainerId = _trainerId;
     if (trainerId == null) throw StateError('Personal não logado.');
-    return _repository.create(newStudent, trainerId);
+    return _repository.create(
+      newStudent,
+      trainerId,
+      trainerName: ref.read(authProvider).user?.name,
+    );
   }
 
   /// Atualiza os dados de um aluno

@@ -7,6 +7,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/physical_measurement_entity.dart';
 import '../../domain/entities/student_entity.dart';
 import '../providers/physical_measurement_provider.dart';
+import '../widgets/new_assessment_sheet.dart';
 import '../providers/trainer_provider.dart';
 
 /// Tela de Evolução Física do Aluno (visão do professor)
@@ -47,11 +48,10 @@ class _PhysicalAssessmentPageState
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(trainerDashboardProvider);
     final students = dashboardState.students;
-    final measurementState = ref.watch(physicalMeasurementProvider);
-
     final history = _selectedStudent != null
-        ? measurementState.historyFor(_selectedStudent!.id)
-        : <PhysicalMeasurementEntity>[];
+        ? (ref.watch(assessmentsProvider(_selectedStudent!.id)).value ??
+            const <PhysicalMeasurementEntity>[])
+        : const <PhysicalMeasurementEntity>[];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -120,6 +120,19 @@ class _PhysicalAssessmentPageState
             Expanded(child: _buildSelectStudentPrompt()),
         ],
       ),
+      floatingActionButton: _selectedStudent == null
+          ? null
+          : FloatingActionButton.extended(
+              backgroundColor: AppColors.teal,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text('Nova avaliação',
+                  style: TextStyle(color: Colors.white)),
+              onPressed: () => showNewAssessmentSheet(
+                context,
+                linkId: _selectedStudent!.id,
+                studentName: _selectedStudent!.name,
+              ),
+            ),
     );
   }
 
@@ -469,6 +482,42 @@ class _PhysicalAssessmentPageState
                 ),
             ],
           ),
+          if (m.recordedBy == 'student') ...[
+            const SizedBox(height: 8),
+            Text('Registrado pelo aluno',
+                style: AppTextStyles.bodySmall
+                    .copyWith(color: AppColors.textTertiary)),
+          ],
+          if ((m.notes ?? '').isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(m.notes!, style: AppTextStyles.bodyMedium),
+          ],
+          if (m.photoUrls.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 96,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: m.photoUrls.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, i) => GestureDetector(
+                  onTap: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => Dialog(
+                      child: InteractiveViewer(
+                        child: Image.network(m.photoUrls[i]),
+                      ),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(m.photoUrls[i],
+                        width: 72, height: 96, fit: BoxFit.cover),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

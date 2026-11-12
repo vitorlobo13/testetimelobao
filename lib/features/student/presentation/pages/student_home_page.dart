@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/notifications/notifications.dart';
+import '../widgets/student_evolution_section.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -69,6 +70,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
                         workoutState.link!.consentAt == null)
                       _buildConsentCard(),
                     const PushPromptCard(),
+                    const PendingAnamneseCard(),
                     workoutState.isLoading
                         ? _buildLoading()
                         : workoutState.currentWorkout == null

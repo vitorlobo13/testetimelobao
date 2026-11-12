@@ -1,7 +1,9 @@
-/// Entidade que representa um snapshot de medidas físicas de um aluno
-/// registrado pelo próprio aluno em determinada data.
+/// Snapshot de medidas físicas de um aluno numa data: registrado pelo
+/// próprio aluno (medidas rápidas) ou pelo personal (avaliação completa).
 class PhysicalMeasurementEntity {
   final String id;
+
+  /// Id do vínculo aluno ↔ personal (`studentLinks/{id}`).
   final String studentId;
   final DateTime recordedAt;
 
@@ -22,6 +24,13 @@ class PhysicalMeasurementEntity {
   final double? leftThigh;
   final double? rightThigh;
 
+  /// Observações do personal e fotos de evolução (frente/lado/costas).
+  final String? notes;
+  final List<String> photoUrls;
+
+  /// 'trainer' ou 'student'.
+  final String recordedBy;
+
   const PhysicalMeasurementEntity({
     required this.id,
     required this.studentId,
@@ -37,6 +46,9 @@ class PhysicalMeasurementEntity {
     this.rightArm,
     this.leftThigh,
     this.rightThigh,
+    this.notes,
+    this.photoUrls = const [],
+    this.recordedBy = 'trainer',
   });
 
   /// Calcula o IMC se peso e altura estiverem disponíveis.
@@ -63,6 +75,9 @@ class PhysicalMeasurementEntity {
     double? rightArm,
     double? leftThigh,
     double? rightThigh,
+    String? notes,
+    List<String>? photoUrls,
+    String? recordedBy,
   }) {
     return PhysicalMeasurementEntity(
       id: id ?? this.id,
@@ -79,6 +94,9 @@ class PhysicalMeasurementEntity {
       rightArm: rightArm ?? this.rightArm,
       leftThigh: leftThigh ?? this.leftThigh,
       rightThigh: rightThigh ?? this.rightThigh,
+      notes: notes ?? this.notes,
+      photoUrls: photoUrls ?? this.photoUrls,
+      recordedBy: recordedBy ?? this.recordedBy,
     );
   }
 }

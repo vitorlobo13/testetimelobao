@@ -342,12 +342,16 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildPhysicalDetail('Peso', '${profile.weight} kg'),
+                _buildPhysicalDetail('Peso',
+                    profile.weight > 0 ? '${profile.weight} kg' : '—'),
                 _buildPhysicalDetail(
                   'Altura',
-                  '${(profile.height / 100).toStringAsFixed(2)} m',
+                  profile.height > 0
+                      ? '${(profile.height / 100).toStringAsFixed(2)} m'
+                      : '—',
                 ),
-                _buildPhysicalDetail('Idade', '${profile.age} anos'),
+                _buildPhysicalDetail(
+                    'Idade', profile.age > 0 ? '${profile.age} anos' : '—'),
               ],
             ),
             const SizedBox(height: 16),

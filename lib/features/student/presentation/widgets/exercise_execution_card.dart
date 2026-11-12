@@ -140,7 +140,7 @@ class ExerciseExecutionCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'Conjugado: faça em sequência com o exercício '
-                            'marcado ao lado, sem descanso entre eles.',
+                            'seguinte (também marcado), sem descanso entre eles.',
                             style: AppTextStyles.bodySmall
                                 .copyWith(color: AppColors.warning),
                           ),
@@ -256,7 +256,10 @@ class ExerciseExecutionCard extends StatelessWidget {
   }
 
   Widget _buildSetRow(int index, SetSessionEntity set) {
-    return Container(
+    return GestureDetector(
+      // A linha inteira registra a série ("Toque para completar").
+      onTap: set.completed ? null : () => onSetComplete(index, null, null),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -317,16 +320,13 @@ class ExerciseExecutionCard extends StatelessWidget {
             )
           else
             IconButton(
-              onPressed: () => _showSetCompletionDialog(index),
+              onPressed: () => onSetComplete(index, null, null),
               icon: const Icon(Icons.add_circle_outline),
               color: AppColors.teal,
             ),
         ],
       ),
+      ),
     );
-  }
-
-  void _showSetCompletionDialog(int setIndex) {
-    // Será implementado na página de execução
   }
 }

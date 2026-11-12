@@ -438,6 +438,9 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
   @override
   Widget build(BuildContext context) {
     final builderState = ref.watch(workoutBuilderProvider);
+    // Mantém a biblioteca de modelos carregada desde a abertura da tela,
+    // para o botão "Modelos" já abrir com a lista pronta.
+    ref.watch(workoutLibraryProvider);
     final currentDivision = builderState.currentDivision;
 
     return Scaffold(

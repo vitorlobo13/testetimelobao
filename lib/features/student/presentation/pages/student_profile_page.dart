@@ -5,6 +5,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
+import '../../../trainer/domain/entities/physical_measurement_entity.dart';
+import '../../../trainer/presentation/providers/physical_measurement_provider.dart';
 
 /// Notifier de estado para o perfil do aluno
 class StudentProfileState {
@@ -67,7 +69,12 @@ class StudentProfileNotifier extends Notifier<StudentProfileState> {
     state = state.copyWith(isEditing: !state.isEditing);
   }
 
-  void saveProfile({required double weight, required double height, required int age, required String phone}) {
+  void saveProfile({
+    required double weight,
+    required double height,
+    required int age,
+    required String phone,
+  }) {
     state = state.copyWith(
       weight: weight,
       height: height,
@@ -97,6 +104,10 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
   late TextEditingController _heightController;
   late TextEditingController _ageController;
   late TextEditingController _phoneController;
+  late TextEditingController _waistController;
+  late TextEditingController _hipController;
+  late TextEditingController _chestController;
+  late TextEditingController _fatController;
 
   @override
   void initState() {
@@ -106,6 +117,10 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
     _heightController = TextEditingController(text: profile.height.toString());
     _ageController = TextEditingController(text: profile.age.toString());
     _phoneController = TextEditingController(text: profile.phone);
+    _waistController = TextEditingController();
+    _hipController = TextEditingController();
+    _chestController = TextEditingController();
+    _fatController = TextEditingController();
   }
 
   @override
@@ -114,6 +129,10 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
     _heightController.dispose();
     _ageController.dispose();
     _phoneController.dispose();
+    _waistController.dispose();
+    _hipController.dispose();
+    _chestController.dispose();
+    _fatController.dispose();
     super.dispose();
   }
 
@@ -149,6 +168,10 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
                 _heightController.text = profileState.height.toString();
                 _ageController.text = profileState.age.toString();
                 _phoneController.text = profileState.phone;
+                _waistController.clear();
+                _hipController.clear();
+                _chestController.clear();
+                _fatController.clear();
               }
               ref.read(studentProfileProvider.notifier).toggleEditing();
             },
@@ -169,6 +192,12 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
               _buildPhysicalSection(profileState),
               const SizedBox(height: 16),
 
+              // Perímetros — somente no modo edição
+              if (profileState.isEditing) ...[
+                _buildMeasurementsSection(),
+                const SizedBox(height: 16),
+              ],
+
               // Informações de Contato
               _buildContactSection(profileState),
               const SizedBox(height: 16),
@@ -180,11 +209,13 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
               // Botão Salvar
               if (profileState.isEditing)
                 CustomButton(
-                  text: 'SALVAR ALTERAÇÕES',
+                  text: 'SALVAR MEDIDAS',
                   onPressed: _saveForm,
                   type: ButtonType.primary,
                   icon: Icons.save,
                 ),
+
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -301,7 +332,10 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildPhysicalDetail('Peso', '${profile.weight} kg'),
-                _buildPhysicalDetail('Altura', '${(profile.height / 100).toStringAsFixed(2)} m'),
+                _buildPhysicalDetail(
+                  'Altura',
+                  '${(profile.height / 100).toStringAsFixed(2)} m',
+                ),
                 _buildPhysicalDetail('Idade', '${profile.age} anos'),
               ],
             ),
@@ -345,6 +379,77 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMeasurementsSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.teal.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.straighten, color: AppColors.lightTeal),
+              const SizedBox(width: 8),
+              Text(
+                'PERÍMETROS E COMPOSIÇÃO',
+                style: AppTextStyles.headlineSmall,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Esses dados serão salvos no seu histórico e exibidos para seu professor.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'Gordura Corporal (%)',
+            hint: 'Ex: 18.5',
+            controller: _fatController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: CustomTextField(
+                  label: 'Cintura (cm)',
+                  hint: 'Ex: 82.0',
+                  controller: _waistController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: CustomTextField(
+                  label: 'Quadril (cm)',
+                  hint: 'Ex: 95.0',
+                  controller: _hipController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          CustomTextField(
+            label: 'Tórax (cm)',
+            hint: 'Ex: 100.0',
+            controller: _chestController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
         ],
       ),
     );
@@ -479,15 +584,41 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
 
   void _saveForm() {
     if (_formKey.currentState?.validate() ?? false) {
+      final double weight = double.parse(_weightController.text);
+      final double height = double.parse(_heightController.text);
+      final int age = int.parse(_ageController.text);
+      final String phone = _phoneController.text;
+
+      // Atualiza o estado do perfil
       ref.read(studentProfileProvider.notifier).saveProfile(
-            weight: double.parse(_weightController.text),
-            height: double.parse(_heightController.text),
-            age: int.parse(_ageController.text),
-            phone: _phoneController.text,
+            weight: weight,
+            height: height,
+            age: age,
+            phone: phone,
           );
+
+      // Registra nova entrada no histórico de medidas físicas
+      // para que o professor possa visualizar a evolução.
+      final userId = ref.read(authProvider).user?.id ?? 'student_mock';
+      final measurement = PhysicalMeasurementEntity(
+        id: '${userId}_${DateTime.now().millisecondsSinceEpoch}',
+        studentId: userId,
+        recordedAt: DateTime.now(),
+        weight: weight,
+        height: height,
+        fatPercentage: double.tryParse(_fatController.text),
+        waist: double.tryParse(_waistController.text),
+        hip: double.tryParse(_hipController.text),
+        chest: double.tryParse(_chestController.text),
+      );
+
+      ref
+          .read(physicalMeasurementProvider.notifier)
+          .addMeasurement(measurement);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Perfil atualizado com sucesso!'),
+          content: Text('Medidas salvas com sucesso! Seu professor poderá ver sua evolução.'),
           backgroundColor: AppColors.success,
         ),
       );

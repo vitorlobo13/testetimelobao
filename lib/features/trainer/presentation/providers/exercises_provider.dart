@@ -30,7 +30,7 @@ class ExercisesState {
 class ExercisesNotifier extends Notifier<ExercisesState> {
   @override
   ExercisesState build() {
-    loadExercises();
+    Future.microtask(() => loadExercises());
     return const ExercisesState();
   }
 
@@ -55,6 +55,14 @@ class ExercisesNotifier extends Notifier<ExercisesState> {
         errorMessage: 'Erro ao carregar exercícios',
       );
     }
+  }
+
+  /// Atualiza um exercício na biblioteca (ex: para adicionar URL do vídeo)
+  void updateExercise(ExerciseEntity updatedExercise) {
+    final updatedList = state.exercises.map((e) {
+      return e.id == updatedExercise.id ? updatedExercise : e;
+    }).toList();
+    state = state.copyWith(exercises: updatedList);
   }
 
   /// Busca exercícios por nome ou categoria
@@ -89,6 +97,7 @@ class ExercisesNotifier extends Notifier<ExercisesState> {
         equipment: 'Barra',
         difficulty: 'Intermediário',
         description: 'Exercício fundamental para desenvolvimento do peitoral',
+        videoUrl: 'https://youtube.com/watch?v=mocked_supino',
       ),
       const ExerciseEntity(
         id: '2',
@@ -157,6 +166,7 @@ class ExercisesNotifier extends Notifier<ExercisesState> {
         muscleGroup: 'Quadríceps',
         equipment: 'Barra',
         difficulty: 'Avançado',
+        videoUrl: 'https://youtube.com/watch?v=mocked_agachamento',
       ),
       const ExerciseEntity(
         id: '10',
@@ -217,6 +227,7 @@ class ExercisesNotifier extends Notifier<ExercisesState> {
         muscleGroup: 'Bíceps',
         equipment: 'Barra',
         difficulty: 'Iniciante',
+        videoUrl: 'https://youtube.com/watch?v=mocked_rosca_direta',
       ),
       const ExerciseEntity(
         id: '17',

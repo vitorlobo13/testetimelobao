@@ -48,11 +48,13 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       await Future.delayed(const Duration(seconds: 2));
 
+      final isStudent = email.trim().toLowerCase() == 'aluno@email.com' && password == '123456';
+
       final user = UserEntity(
-        id: '123',
-        name: 'João Silva',
+        id: isStudent ? 'student_123' : '123',
+        name: isStudent ? 'Carlos Mendes' : 'João Silva',
         email: email,
-        userType: UserType.trainer,
+        userType: isStudent ? UserType.student : UserType.trainer,
         createdAt: DateTime.now(),
       );
 

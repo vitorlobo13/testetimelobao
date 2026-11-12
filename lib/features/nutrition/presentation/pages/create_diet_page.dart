@@ -7,6 +7,7 @@ import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../trainer/domain/entities/student_entity.dart';
 import '../../domain/entities/diet_entity.dart';
 import '../../domain/entities/meal_entity.dart';
+import '../providers/diet_library_provider.dart';
 import '../providers/diet_provider.dart';
 import '../widgets/meal_card.dart';
 import '../widgets/food_item_card.dart';
@@ -451,12 +452,53 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
     }
   }
 
+  /// Abre o bottom sheet para importar um template da biblioteca.
+  /// Ao confirmar, as refeições do template são carregadas no builder atual.
+  void _showImportFromLibrarySheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ImportLibrarySheet(
+        onImport: (template) {
+          ref.read(dietProvider.notifier).loadMeals(template.meals);
+          // Pré-preenche nome e descrição se estiverem vazios
+          if (_dietNameController.text.isEmpty) {
+            _dietNameController.text = template.name;
+          }
+          if (_dietDescriptionController.text.isEmpty) {
+            _dietDescriptionController.text = template.description;
+          }
+          if (_targetCaloriesController.text.isEmpty && template.targetCalories != null) {
+            _targetCaloriesController.text = template.targetCalories!.toStringAsFixed(0);
+          }
+          if (_targetProteinController.text.isEmpty && template.targetProtein != null) {
+            _targetProteinController.text = template.targetProtein!.toStringAsFixed(0);
+          }
+          if (_targetCarbsController.text.isEmpty && template.targetCarbs != null) {
+            _targetCarbsController.text = template.targetCarbs!.toStringAsFixed(0);
+          }
+          if (_targetFatsController.text.isEmpty && template.targetFats != null) {
+            _targetFatsController.text = template.targetFats!.toStringAsFixed(0);
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Dieta "${template.name}" importada! Personalize conforme necessário.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dietState = ref.watch(dietProvider);
     final meals = dietState.meals;
 
     // Calcula totais
+
     double totalCalories = 0;
     double totalProtein = 0;
     double totalCarbs = 0;
@@ -548,15 +590,30 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
                 'Refeições',
                 style: AppTextStyles.headlineMedium,
               ),
-              TextButton.icon(
-                onPressed: _showAddMealDialog,
-                icon: const Icon(Icons.add, color: AppColors.teal),
-                label: Text(
-                  'Adicionar',
-                  style: AppTextStyles.buttonMedium.copyWith(
-                    color: AppColors.teal,
+              Row(
+                children: [
+                  // Botão: importar da biblioteca
+                  TextButton.icon(
+                    onPressed: _showImportFromLibrarySheet,
+                    icon: const Icon(Icons.library_books, color: AppColors.lightTeal, size: 18),
+                    label: Text(
+                      'Biblioteca',
+                      style: AppTextStyles.buttonMedium.copyWith(
+                        color: AppColors.lightTeal,
+                      ),
+                    ),
                   ),
-                ),
+                  TextButton.icon(
+                    onPressed: _showAddMealDialog,
+                    icon: const Icon(Icons.add, color: AppColors.teal),
+                    label: Text(
+                      'Adicionar',
+                      style: AppTextStyles.buttonMedium.copyWith(
+                        color: AppColors.teal,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -747,3 +804,217 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
     );
   }
 }
+
+// ─── Bottom Sheet: Importar da Biblioteca ────────────────────────────────
+
+/// Bottom sheet que lista os templates da biblioteca para o professor
+/// selecionar e importar ao criar uma dieta para um aluno.
+class _ImportLibrarySheet extends ConsumerStatefulWidget {
+  final void Function(DietTemplateModel template) onImport;
+
+  const _ImportLibrarySheet({required this.onImport});
+
+  @override
+  ConsumerState<_ImportLibrarySheet> createState() =>
+      _ImportLibrarySheetState();
+}
+
+class _ImportLibrarySheetState extends ConsumerState<_ImportLibrarySheet> {
+  String _selectedCategory = 'Todos';
+
+  @override
+  Widget build(BuildContext context) {
+    final libraryState = ref.watch(dietLibraryProvider);
+    final allCategories = ['Todos', ...libraryState.categories];
+
+    final filtered = _selectedCategory == 'Todos'
+        ? libraryState.templates
+        : libraryState.templates
+            .where((t) => t.category == _selectedCategory)
+            .toList();
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.82,
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // Handle
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // Cabeçalho
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
+            child: Row(
+              children: [
+                const Icon(Icons.library_books, color: AppColors.lightTeal),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Importar da Biblioteca',
+                        style: AppTextStyles.headlineMedium,
+                      ),
+                      Text(
+                        'Selecione um template base — você poderá personalizar.',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+
+          // Filtros por categoria
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: allCategories.map((cat) {
+                final isSelected = _selectedCategory == cat;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(cat),
+                    selected: isSelected,
+                    onSelected: (v) {
+                      if (v) setState(() => _selectedCategory = cat);
+                    },
+                    selectedColor: AppColors.teal,
+                    backgroundColor: AppColors.surface,
+                    labelStyle: AppTextStyles.bodySmall.copyWith(
+                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(
+                        color: isSelected ? AppColors.teal : AppColors.surfaceLight,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          // Lista de templates
+          Expanded(
+            child: libraryState.isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.teal),
+                  )
+                : filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Nenhum template disponível nesta categoria.',
+                          style: AppTextStyles.bodyMedium,
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final template = filtered[index];
+                          return _ImportTemplateCard(
+                            template: template,
+                            onImport: () {
+                              Navigator.pop(context);
+                              widget.onImport(template);
+                            },
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportTemplateCard extends StatelessWidget {
+  final DietTemplateModel template;
+  final VoidCallback onImport;
+
+  const _ImportTemplateCard({
+    required this.template,
+    required this.onImport,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.surfaceLight),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(template.name, style: AppTextStyles.headlineSmall.copyWith(fontSize: 14)),
+                const SizedBox(height: 4),
+                Text(
+                  template.category,
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.lightTeal),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${template.totalCalories.toStringAsFixed(0)} kcal  •  '
+                  'P ${template.totalProtein.toStringAsFixed(0)}g  '
+                  'C ${template.totalCarbs.toStringAsFixed(0)}g  '
+                  'G ${template.totalFats.toStringAsFixed(0)}g  '
+                  '•  ${template.meals.length} refeição(ões)',
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: onImport,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.teal,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            ),
+            child: Text(
+              'Importar',
+              style: AppTextStyles.buttonMedium.copyWith(
+                color: Colors.white,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

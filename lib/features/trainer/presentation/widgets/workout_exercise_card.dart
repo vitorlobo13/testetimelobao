@@ -123,6 +123,48 @@ class WorkoutExerciseCard extends StatelessWidget {
                   ),
                 ),
               ],
+
+              // Vídeo (se houver)
+              if (workoutExercise.exercise.videoUrl != null &&
+                  workoutExercise.exercise.videoUrl!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       SnackBar(
+                         content: Text('Assistindo vídeo: ${workoutExercise.exercise.videoUrl}'),
+                         backgroundColor: AppColors.teal,
+                       ),
+                     );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.teal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.play_circle_outline,
+                          size: 18,
+                          color: AppColors.teal,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Vídeo Explicativo Anexado',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.teal,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

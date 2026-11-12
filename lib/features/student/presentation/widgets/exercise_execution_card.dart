@@ -157,6 +157,44 @@ class ExerciseExecutionCard extends StatelessWidget {
                     ),
                   ],
 
+                  if (workoutExercise.exercise.videoUrl != null && workoutExercise.exercise.videoUrl!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () {
+                         ScaffoldMessenger.of(context).showSnackBar(
+                           const SnackBar(
+                             content: Text('Abrindo vídeo explicativo...'),
+                             backgroundColor: AppColors.teal,
+                           ),
+                         );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.teal.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.teal.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.play_circle_fill,
+                              size: 24,
+                              color: AppColors.teal,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Assistir Vídeo Explicativo',
+                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.teal, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 16),
 
                   // Lista de séries

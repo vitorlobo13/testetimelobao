@@ -45,8 +45,9 @@ class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
 
   @override
   StudentWorkoutState build() {
-    loadCurrentWorkout();
+    Future.microtask(() => loadCurrentWorkout());
     return StudentWorkoutState(
+      isLoading: true,
       history: _generateMockHistory(),
     );
   }

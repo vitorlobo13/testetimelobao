@@ -74,6 +74,11 @@ class DietNotifier extends Notifier<DietState> {
     state = state.copyWith(meals: List<MealEntity>.from(diet.meals));
   }
 
+  /// Carrega uma lista de refeições no builder (para edição ou template)
+  void loadMeals(List<MealEntity> meals) {
+    state = state.copyWith(meals: List<MealEntity>.from(meals));
+  }
+
   /// Adiciona refeição
   void addMeal(String name, String time) {
     final newMeal = MealEntity(

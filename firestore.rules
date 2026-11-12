@@ -113,12 +113,28 @@ service cloud.firestore {
           && onlyChanges(['answers', 'answeredAt']);
       }
 
-      // Treinos, avaliações, anamnese, dietas e pagamentos: o personal
+      // Pagamentos: só o personal dono registra, sempre em nome dele e
+      // deste vínculo (a tela financeira lista por trainerId).
+      match /payments/{paymentId} {
+        allow read: if ownsLink() || isLinkStudent();
+        allow create, update: if ownsLink()
+          && request.resource.data.trainerId == request.auth.uid
+          && request.resource.data.linkId == linkId;
+        allow delete: if ownsLink();
+      }
+
+      // Treinos, avaliações, anamnese e dietas: o personal
       // escreve, o aluno do vínculo ativo só lê.
       match /{collection}/{docId} {
         allow read: if ownsLink() || isLinkStudent();
-        allow write: if ownsLink() && collection != 'sessions';
+        allow write: if ownsLink()
+          && collection != 'sessions' && collection != 'payments';
       }
+    }
+
+    // Consulta em grupo dos pagamentos de todos os alunos do personal.
+    match /{path=**}/payments/{paymentId} {
+      allow read: if isTrainer() && resource.data.trainerId == request.auth.uid;
     }
 
     // Qualquer outro caminho: fechado.

@@ -1,24 +1,80 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../providers/trainer_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../finance/data/payment_repository.dart';
+import '../../../finance/presentation/widgets/payment_actions.dart';
 import '../../domain/entities/student_entity.dart';
+import '../providers/trainer_provider.dart';
+import 'student_detail_page.dart';
 
-/// Tela de Gestão Financeira para Personal Trainers
-class FinancialManagementPage extends ConsumerWidget {
+const _monthNames = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+/// Gestão financeira do personal: só controle (o app não cobra).
+/// Mostra o que entrou no mês, quem está atrasado e quem vence logo,
+/// com atalhos para registrar o pagamento e cobrar pelo WhatsApp.
+class FinancialManagementPage extends ConsumerStatefulWidget {
   const FinancialManagementPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final dashboardState = ref.watch(trainerDashboardProvider);
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  ConsumerState<FinancialManagementPage> createState() =>
+      _FinancialManagementPageState();
+}
 
-    // Filtra alunos com pagamentos pendentes ou atrasados
-    final pendingStudents = dashboardState.students.where((s) =>
-        s.paymentStatus == PaymentStatus.pending ||
-        s.paymentStatus == PaymentStatus.overdue).toList();
+class _FinancialManagementPageState
+    extends ConsumerState<FinancialManagementPage> {
+  final _money = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+  late DateTime _month; // primeiro dia do mês exibido
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _month = DateTime(now.year, now.month);
+  }
+
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return _month.year == now.year && _month.month == now.month;
+  }
+
+  void _shiftMonth(int delta) =>
+      setState(() => _month = DateTime(_month.year, _month.month + delta));
+
+  @override
+  Widget build(BuildContext context) {
+    final dashboard = ref.watch(trainerDashboardProvider);
+    final paymentsAsync = ref.watch(trainerPaymentsProvider);
+
+    final billable = dashboard.students.where((s) => s.isBillable).toList();
+    final overdue = billable
+        .where((s) => s.effectivePaymentStatus == PaymentStatus.overdue)
+        .toList()
+      ..sort((a, b) => (a.daysUntilDue ?? 0).compareTo(b.daysUntilDue ?? 0));
+    final dueSoon = billable
+        .where((s) => s.effectivePaymentStatus == PaymentStatus.pending)
+        .toList()
+      ..sort((a, b) =>
+          (a.daysUntilDue ?? -999).compareTo(b.daysUntilDue ?? -999));
+
+    final expected =
+        billable.fold<double>(0, (sum, s) => sum + (s.monthlyFee ?? 0));
+    final overdueAmount = overdue.fold<double>(
+        0, (sum, s) => sum + (s.monthlyFee ?? 0) * s.planMonths);
+
+    final monthPayments = (paymentsAsync.value ?? const <PaymentEntity>[])
+        .where((p) =>
+            p.paidAt.year == _month.year && p.paidAt.month == _month.month)
+        .toList();
+    final received =
+        monthPayments.fold<double>(0, (sum, p) => sum + p.amount);
+    final monthLabel = '${_monthNames[_month.month - 1]} ${_month.year}';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -31,301 +87,296 @@ class FinancialManagementPage extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: dashboardState.isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
-          : SingleChildScrollView(
+      body: dashboard.isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.teal))
+          : ListView(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Cards de Resumo Financeiro
-                  _buildSummarySection(dashboardState, currencyFormat),
-                  const SizedBox(height: 24),
-
-                  // Lista de Pendências
-                  Text(
-                    'PAGAMENTOS PENDENTES OU ATRASADOS',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textSecondary,
+              children: [
+                _monthSelector(monthLabel),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _summaryCard(
+                        icon: Icons.trending_up,
+                        color: AppColors.success,
+                        title: 'Recebido',
+                        value: _money.format(received),
+                        caption: paymentsAsync.isLoading
+                            ? 'Carregando...'
+                            : '${monthPayments.length} pagamento(s) em $monthLabel',
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _summaryCard(
+                        icon: Icons.calendar_month,
+                        color: AppColors.lightTeal,
+                        title: 'Previsto por mês',
+                        value: _money.format(expected),
+                        caption: '${billable.length} aluno(s) pagantes',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _summaryCard(
+                        icon: Icons.warning_amber_rounded,
+                        color: AppColors.error,
+                        title: 'Em atraso',
+                        value: _money.format(overdueAmount),
+                        caption: '${overdue.length} aluno(s)',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _summaryCard(
+                        icon: Icons.schedule,
+                        color: AppColors.warning,
+                        title: 'A vencer',
+                        value: '${dueSoon.length}',
+                        caption:
+                            'Nos próximos ${StudentEntity.dueSoonDays} dias',
+                      ),
+                    ),
+                  ],
+                ),
+                if (paymentsAsync.hasError) ...[
                   const SizedBox(height: 12),
-                  if (pendingStudents.isEmpty)
-                    _buildNoPendenciesCard()
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: pendingStudents.length,
-                      itemBuilder: (context, index) {
-                        final student = pendingStudents[index];
-                        return _PendingPaymentCard(
-                          student: student,
-                          currencyFormat: currencyFormat,
-                        );
-                      },
-                    ),
-                  const SizedBox(height: 24),
-
-                  // Histórico Recente de Recebimentos
-                  Text(
-                    'RECEBIMENTOS RECENTES',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildRecentTransactionsSection(dashboardState, currencyFormat),
+                  Text('Erro ao carregar pagamentos: ${paymentsAsync.error}',
+                      style: const TextStyle(color: AppColors.error)),
                 ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildSummarySection(TrainerDashboardState state, NumberFormat format) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceLight),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.trending_up, color: AppColors.success, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Faturamento',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                const SizedBox(height: 24),
+                _sectionTitle('EM ATRASO (${overdue.length})'),
+                if (overdue.isEmpty)
+                  _emptyCard(Icons.check_circle_outline, 'Ninguém em atraso!')
+                else
+                  ...overdue.map((s) => _ChargeCard(student: s)),
+                const SizedBox(height: 24),
+                _sectionTitle('A VENCER (${dueSoon.length})'),
+                if (dueSoon.isEmpty)
+                  _emptyCard(Icons.event_available,
+                      'Nenhum vencimento nos próximos ${StudentEntity.dueSoonDays} dias.')
+                else
+                  ...dueSoon.map((s) => _ChargeCard(student: s)),
+                const SizedBox(height: 24),
+                _sectionTitle(
+                    'RECEBIMENTOS DE ${monthLabel.toUpperCase()}'),
+                if (monthPayments.isEmpty)
+                  _emptyCard(Icons.receipt_long,
+                      'Nenhum pagamento registrado neste mês.')
+                else
+                  Container(
+                    decoration: _box(),
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < monthPayments.length; i++) ...[
+                          if (i > 0)
+                            const Divider(
+                                color: AppColors.surfaceLight, height: 1),
+                          PaymentTile(
+                            payment: monthPayments[i],
+                            showStudent: true,
+                            onTap: () =>
+                                _openStudent(monthPayments[i].linkId),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  format.format(state.monthlyRevenue),
-                  style: AppTextStyles.displaySmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 22,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Este mês (estimado)',
-                  style: AppTextStyles.bodySmall.copyWith(fontSize: 10),
-                ),
+                const SizedBox(height: 24),
               ],
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceLight),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Atrasados',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '${state.pendingPayments} pendentes',
-                  style: AppTextStyles.displaySmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 22,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Necessitam cobrança',
-                  style: AppTextStyles.bodySmall.copyWith(fontSize: 10),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 
-  Widget _buildNoPendenciesCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceLight),
-      ),
-      child: const Column(
-        children: [
-          Icon(Icons.check_circle_outline, color: AppColors.success, size: 48),
-          SizedBox(height: 12),
-          Text(
-            'Tudo em dia!',
-            style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Não há mensalidades atrasadas ou pendentes.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-          ),
-        ],
-      ),
-    );
+  void _openStudent(String linkId) {
+    final student = ref
+        .read(trainerDashboardProvider)
+        .students
+        .where((s) => s.id == linkId)
+        .firstOrNull;
+    if (student == null) return;
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => StudentDetailPage(student: student)));
   }
 
-  Widget _buildRecentTransactionsSection(TrainerDashboardState state, NumberFormat format) {
-    final paidStudents = state.students
-        .where((s) => s.paymentStatus == PaymentStatus.paid && s.monthlyFee != null)
-        .toList();
-
-    if (paidStudents.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(
-          child: Text('Nenhum pagamento recebido recentemente.', style: TextStyle(color: AppColors.textSecondary)),
+  Widget _monthSelector(String label) => Container(
+        decoration: _box(),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: 'Mês anterior',
+              icon: const Icon(Icons.chevron_left,
+                  color: AppColors.textPrimary),
+              onPressed: () => _shiftMonth(-1),
+            ),
+            Expanded(
+              child: Text(label,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.headlineSmall),
+            ),
+            IconButton(
+              tooltip: 'Próximo mês',
+              icon: Icon(Icons.chevron_right,
+                  color: _isCurrentMonth
+                      ? AppColors.textTertiary
+                      : AppColors.textPrimary),
+              onPressed: _isCurrentMonth ? null : () => _shiftMonth(1),
+            ),
+          ],
         ),
       );
-    }
 
-    return Container(
-      decoration: BoxDecoration(
+  Widget _summaryCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String value,
+    required String caption,
+  }) =>
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: _box(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(title,
+                      style: AppTextStyles.bodySmall
+                          .copyWith(color: AppColors.textSecondary)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(value,
+                  style: AppTextStyles.displaySmall.copyWith(
+                      color: AppColors.textPrimary, fontSize: 22)),
+            ),
+            const SizedBox(height: 4),
+            Text(caption,
+                style: AppTextStyles.bodySmall.copyWith(fontSize: 10)),
+          ],
+        ),
+      );
+
+  Widget _sectionTitle(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Text(text,
+            style: AppTextStyles.labelLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textSecondary)),
+      );
+
+  Widget _emptyCard(IconData icon, String text) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: _box(),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.success),
+            const SizedBox(width: 12),
+            Expanded(
+                child: Text(text,
+                    style: const TextStyle(color: AppColors.textSecondary))),
+          ],
+        ),
+      );
+
+  BoxDecoration _box() => BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.surfaceLight),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: paidStudents.length,
-        separatorBuilder: (context, index) => const Divider(color: AppColors.surfaceLight, height: 1),
-        itemBuilder: (context, index) {
-          final student = paidStudents[index];
-          return ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.surfaceLight,
-              child: Icon(Icons.arrow_downward, color: AppColors.success, size: 20),
-            ),
-            title: Text(student.name, style: AppTextStyles.bodyLarge),
-            subtitle: Text('Mensalidade Plano ${student.planType ?? "Regular"}', style: AppTextStyles.bodySmall),
-            trailing: Text(
-              format.format(student.monthlyFee),
-              style: AppTextStyles.headlineSmall.copyWith(color: AppColors.success),
-            ),
-          );
-        },
-      ),
-    );
-  }
+      );
 }
 
-class _PendingPaymentCard extends StatelessWidget {
+/// Cartão de cobrança: aluno, vencimento e os atalhos Cobrar / Recebido.
+class _ChargeCard extends ConsumerWidget {
+  const _ChargeCard({required this.student});
   final StudentEntity student;
-  final NumberFormat currencyFormat;
-
-  const _PendingPaymentCard({
-    required this.student,
-    required this.currencyFormat,
-  });
 
   @override
-  Widget build(BuildContext context) {
-    final isOverdue = student.paymentStatus == PaymentStatus.overdue;
-    final statusColor = isOverdue ? AppColors.error : AppColors.warning;
-    final statusText = isOverdue ? 'Atrasado' : 'Pendente';
-
-    final dateStr = student.nextPaymentDate != null
-        ? DateFormat('dd/MM/yyyy').format(student.nextPaymentDate!)
-        : 'Não definida';
-
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = student;
+    final money = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final color = paymentStatusColor(s.effectivePaymentStatus);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceLight),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isOverdue ? Icons.error_outline : Icons.pending_actions,
-              color: statusColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          InkWell(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => StudentDetailPage(student: s))),
+            child: Row(
               children: [
-                Text(student.name, style: AppTextStyles.headlineSmall.copyWith(fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(
-                  'Plano: ${student.planType ?? "Regular"}',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s.name,
+                          style: AppTextStyles.headlineSmall
+                              .copyWith(fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Text(dueLabel(s),
+                          style: AppTextStyles.bodySmall
+                              .copyWith(color: color)),
+                      const SizedBox(height: 2),
+                      Text('Plano ${s.planType ?? 'Regular'}',
+                          style: AppTextStyles.bodySmall),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 2),
                 Text(
-                  'Vencimento: $dateStr',
-                  style: AppTextStyles.bodySmall,
+                  s.monthlyFee == null
+                      ? '—'
+                      : money.format(s.monthlyFee! * s.planMonths),
+                  style: AppTextStyles.headlineSmall,
                 ),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          const SizedBox(height: 12),
+          Row(
             children: [
-              Text(
-                currencyFormat.format(student.monthlyFee ?? 0.0),
-                style: AppTextStyles.headlineSmall.copyWith(color: AppColors.textPrimary),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  statusText,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.surfaceLight),
                   ),
+                  onPressed: () => chargeOnWhatsApp(context, s,
+                      trainerName: ref.read(authProvider).user?.name),
+                  icon: const Icon(Icons.chat, size: 18),
+                  label: const Text('Cobrar'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => showRegisterPaymentSheet(context, s),
+                  icon: const Icon(Icons.check, size: 18),
+                  label: const Text('Recebido'),
                 ),
               ),
             ],

@@ -124,12 +124,14 @@ class TrainerDashboardNotifier extends Notifier<TrainerDashboardState> {
     final current =
         list.where((s) => s.linkStatus != LinkStatus.archived).toList();
     final activeCount = current.where((s) => s.isActive).length;
+    // Situação calculada pelo vencimento (atrasado ou vencendo em breve).
     final pendingCount = current
-        .where((s) => s.paymentStatus == PaymentStatus.pending ||
-                    s.paymentStatus == PaymentStatus.overdue)
+        .where((s) => s.isBillable &&
+            (s.effectivePaymentStatus == PaymentStatus.pending ||
+                s.effectivePaymentStatus == PaymentStatus.overdue))
         .length;
     final revenue = current
-        .where((s) => s.isActive && s.monthlyFee != null)
+        .where((s) => s.isBillable && s.monthlyFee != null)
         .fold(0.0, (sum, s) => sum + s.monthlyFee!);
 
     state = state.copyWith(

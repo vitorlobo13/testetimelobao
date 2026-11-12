@@ -11,7 +11,9 @@ import '../widgets/info_row.dart';
 import '../widgets/section_card.dart';
 import '../widgets/workout_history_item.dart';
 import '../widgets/student_workouts_section.dart';
-import '../widgets/payment_history_item.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../finance/data/payment_repository.dart';
+import '../../../finance/presentation/widgets/payment_actions.dart';
 import 'create_workout_page.dart';
 import 'add_student_page.dart';
 import 'physical_assessment_page.dart';
@@ -726,28 +728,9 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
   // ABA 3: PAGAMENTOS
   Widget _buildPaymentsTab() {
     final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-
-    // Dados mockados para demonstração
-    final paymentHistory = [
-      PaymentHistoryItem(
-        date: DateTime(2024, 5, 1),
-        amount: _currentStudent.monthlyFee ?? 250.00,
-        paid: false,
-        reference: 'Maio/2024',
-      ),
-      PaymentHistoryItem(
-        date: DateTime(2024, 4, 1),
-        amount: _currentStudent.monthlyFee ?? 250.00,
-        paid: true,
-        reference: 'Abril/2024',
-      ),
-      PaymentHistoryItem(
-        date: DateTime(2024, 3, 1),
-        amount: _currentStudent.monthlyFee ?? 250.00,
-        paid: true,
-        reference: 'Março/2024',
-      ),
-    ];
+    final s = _currentStudent;
+    final status = s.effectivePaymentStatus;
+    final paymentsAsync = ref.watch(linkPaymentsProvider(s.id));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -761,27 +744,66 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               children: [
                 InfoRow(
                   label: 'Mensalidade',
-                  value: _currentStudent.monthlyFee != null
-                      ? currencyFormat.format(_currentStudent.monthlyFee)
+                  value: s.monthlyFee != null
+                      ? currencyFormat.format(s.monthlyFee)
                       : 'Não definida',
                   icon: Icons.attach_money,
                   valueColor: AppColors.success,
                 ),
-                if (_currentStudent.nextPaymentDate != null)
-                  InfoRow(
-                    label: 'Próximo Vencimento',
-                    value: DateFormat('dd/MM/yyyy').format(_currentStudent.nextPaymentDate!),
-                    icon: Icons.event,
-                    valueColor: _currentStudent.isPaymentOverdue
-                        ? AppColors.error
-                        : AppColors.textPrimary,
-                  ),
                 InfoRow(
-                  label: 'Status',
-                  value: _currentStudent.paymentStatus.displayName,
-                  icon: Icons.info_outline,
-                  valueColor: _getPaymentStatusColor(_currentStudent.paymentStatus),
+                  label: 'Plano',
+                  value: s.planMonths == 1
+                      ? (s.planType ?? 'Mensal')
+                      : '${s.planType} (${s.planMonths} meses por pagamento)',
+                  icon: Icons.card_membership,
                 ),
+                InfoRow(
+                  label: 'Próximo Vencimento',
+                  value: s.nextPaymentDate != null
+                      ? DateFormat('dd/MM/yyyy').format(s.nextPaymentDate!)
+                      : 'Não definido',
+                  icon: Icons.event,
+                  valueColor: paymentStatusColor(status),
+                ),
+                InfoRow(
+                  label: 'Situação',
+                  value: status == PaymentStatus.exempt
+                      ? 'Isento'
+                      : '${status.displayName} · ${dueLabel(s)}',
+                  icon: Icons.info_outline,
+                  valueColor: paymentStatusColor(status),
+                ),
+                if (status != PaymentStatus.exempt) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.textPrimary,
+                            side: const BorderSide(color: AppColors.surfaceLight),
+                          ),
+                          onPressed: () => chargeOnWhatsApp(context, s,
+                              trainerName: ref.read(authProvider).user?.name),
+                          icon: const Icon(Icons.chat, size: 18),
+                          label: const Text('Cobrar'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.success,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () => showRegisterPaymentSheet(context, s),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Registrar'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -790,12 +812,30 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
           SectionCard(
             title: 'Histórico de Pagamentos',
             icon: Icons.receipt_long,
-            actionLabel: 'Ver todos',
-            onTap: () {
-              _showPaymentHistoryBottomSheet(context, paymentHistory);
-            },
-            child: Column(
-              children: paymentHistory,
+            child: paymentsAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                    child: CircularProgressIndicator(color: AppColors.teal)),
+              ),
+              error: (e, _) => Text('Erro ao carregar pagamentos: $e',
+                  style: const TextStyle(color: AppColors.error)),
+              data: (list) => list.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Text('Nenhum pagamento registrado ainda.',
+                          style: TextStyle(color: AppColors.textSecondary)),
+                    )
+                  : Column(
+                      children: [
+                        for (final p in list)
+                          PaymentTile(
+                            payment: p,
+                            onDelete: () =>
+                                confirmDeletePayment(context, ref, p, s),
+                          ),
+                      ],
+                    ),
             ),
           ),
         ],
@@ -868,19 +908,6 @@ Widget _buildBottomBar() {
     return AppColors.error;
   }
 
-  Color _getPaymentStatusColor(PaymentStatus status) {
-    switch (status) {
-      case PaymentStatus.paid:
-        return AppColors.success;
-      case PaymentStatus.pending:
-        return AppColors.warning;
-      case PaymentStatus.overdue:
-        return AppColors.error;
-      case PaymentStatus.exempt:
-        return AppColors.info;
-    }
-  }
-
   String _getEnrollmentDuration() {
     final duration = DateTime.now().difference(_currentStudent.enrollmentDate);
     final months = (duration.inDays / 30).floor();
@@ -921,51 +948,6 @@ Widget _buildBottomBar() {
                   children: [
                     Text(
                       'Histórico de Treinos',
-                      style: AppTextStyles.headlineMedium,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textPrimary),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView(
-                    children: items,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showPaymentHistoryBottomSheet(
-    BuildContext context,
-    List<Widget> items,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Histórico de Pagamentos',
                       style: AppTextStyles.headlineMedium,
                     ),
                     IconButton(

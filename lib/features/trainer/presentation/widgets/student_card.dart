@@ -70,7 +70,7 @@ class StudentCard extends StatelessWidget {
             ),
 
             // Indicador de pagamento
-            if (student.isPaymentOverdue)
+            if (student.isBillable && student.isPaymentOverdue)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -95,7 +95,7 @@ class StudentCard extends StatelessWidget {
                   ],
                 ),
               )
-            else if (student.paymentStatus == PaymentStatus.paid)
+            else if (student.effectivePaymentStatus == PaymentStatus.paid)
               const Icon(
                 Icons.check_circle,
                 color: AppColors.success,

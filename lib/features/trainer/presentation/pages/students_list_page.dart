@@ -67,7 +67,7 @@ class _StudentsListPageState extends ConsumerState<StudentsListPage> {
     // Filtro de pagamento
     if (_selectedPaymentStatus != null) {
       students = students
-          .where((s) => s.paymentStatus == _selectedPaymentStatus)
+          .where((s) => s.effectivePaymentStatus == _selectedPaymentStatus)
           .toList();
     }
 

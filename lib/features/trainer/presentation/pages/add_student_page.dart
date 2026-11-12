@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
@@ -31,7 +32,8 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
 
   Gender _selectedGender = Gender.male;
   String _selectedPlan = 'Básico';
-  PaymentStatus _paymentStatus = PaymentStatus.pending;
+  bool _exempt = false;
+  late DateTime _nextDue;
 
   @override
   void initState() {
@@ -44,6 +46,9 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
     _heightController = TextEditingController(text: s?.height?.toString() ?? '');
     _ageController = TextEditingController(text: s?.age?.toString() ?? '');
     _monthlyFeeController = TextEditingController(text: s?.monthlyFee?.toString() ?? '');
+    final today = DateTime.now();
+    // Aluno novo: a primeira mensalidade vence hoje (fica pendente até registrar).
+    _nextDue = s?.nextPaymentDate ?? DateTime(today.year, today.month, today.day);
 
     if (s != null) {
       _selectedGender = s.gender ?? Gender.male;
@@ -52,7 +57,7 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
       } else {
         _selectedPlan = 'Básico';
       }
-      _paymentStatus = s.paymentStatus;
+      _exempt = s.paymentStatus == PaymentStatus.exempt;
     }
   }
 
@@ -184,7 +189,7 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
                 ],
               ),
               const SizedBox(height: 12),
-              _buildPaymentStatusDropdown(),
+              _buildDueAndExemptSection(),
               const SizedBox(height: 32),
 
               // Botão Cadastrar
@@ -299,40 +304,62 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
     );
   }
 
-  Widget _buildPaymentStatusDropdown() {
+  Future<void> _pickDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _nextDue,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+      locale: const Locale('pt', 'BR'),
+      helpText: 'Próximo vencimento',
+    );
+    if (picked != null) setState(() => _nextDue = picked);
+  }
+
+  Widget _buildDueAndExemptSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Status Inicial do Pagamento',
-          style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.surfaceLight),
+        if (!_exempt) ...[
+          Text(
+            'Próximo vencimento',
+            style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<PaymentStatus>(
-              value: _paymentStatus,
-              dropdownColor: AppColors.surface,
-              isExpanded: true,
-              style: AppTextStyles.bodyLarge,
-              icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
-              items: const [
-                DropdownMenuItem(value: PaymentStatus.paid, child: Text('Pago')),
-                DropdownMenuItem(value: PaymentStatus.pending, child: Text('Pendente')),
-                DropdownMenuItem(value: PaymentStatus.overdue, child: Text('Atrasado')),
-                DropdownMenuItem(value: PaymentStatus.exempt, child: Text('Isento')),
-              ],
-              onChanged: (v) {
-                if (v != null) setState(() => _paymentStatus = v);
-              },
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: _pickDueDate,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.surfaceLight),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.event, color: AppColors.textSecondary),
+                  const SizedBox(width: 12),
+                  Text(DateFormat('dd/MM/yyyy').format(_nextDue),
+                      style: AppTextStyles.bodyLarge),
+                ],
+              ),
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Depois, cada pagamento registrado empurra o vencimento automaticamente.',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+          const SizedBox(height: 8),
+        ],
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          activeThumbColor: AppColors.teal,
+          title: Text('Aluno isento de mensalidade', style: AppTextStyles.bodyLarge),
+          value: _exempt,
+          onChanged: (v) => setState(() => _exempt = v),
         ),
       ],
     );
@@ -366,9 +393,12 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
       gender: _selectedGender,
       planType: _selectedPlan,
       monthlyFee: fee,
-      nextPaymentDate: existing?.nextPaymentDate ??
-          DateTime.now().add(const Duration(days: 30)),
-      paymentStatus: _paymentStatus,
+      nextPaymentDate: _nextDue,
+      paymentStatus: _exempt
+          ? PaymentStatus.exempt
+          : (existing == null || existing.paymentStatus == PaymentStatus.exempt
+              ? PaymentStatus.pending
+              : existing.paymentStatus),
       lastWorkoutDate: existing?.lastWorkoutDate,
       totalWorkouts: existing?.totalWorkouts ?? 0,
       studentUid: existing?.studentUid,

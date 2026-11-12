@@ -15,6 +15,7 @@ import 'student_detail_page.dart';
 import 'add_student_page.dart';
 import 'create_workout_page.dart';
 import 'physical_assessment_page.dart';
+import 'financial_management_page.dart';
 import '../../domain/entities/student_entity.dart';
 
 
@@ -28,6 +29,10 @@ class TrainerHomePage extends ConsumerStatefulWidget {
 }
 
 class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
+  void _openFinance() => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const FinancialManagementPage()),
+      );
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -254,9 +259,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 icon: Icons.warning,
                 iconColor: AppColors.warning,
                 backgroundColor: AppColors.warning.withValues(alpha: 0.1),
-                onTap: () {
-                  // TODO: Ver pagamentos pendentes
-                },
+                onTap: _openFinance,
               ),
               StatCard(
                 title: 'Receita Mensal',
@@ -264,9 +267,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 icon: Icons.attach_money,
                 iconColor: AppColors.success,
                 subtitle: 'Prevista',
-                onTap: () {
-                  // TODO: Ver detalhes financeiros
-                },
+                onTap: _openFinance,
               ),
             ],
           ),

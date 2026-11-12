@@ -113,11 +113,48 @@ class StudentEntity {
     return null;
   }
 
-  /// Verifica se pagamento está atrasado
-  bool get isPaymentOverdue {
-    if (nextPaymentDate == null) return false;
-    return nextPaymentDate!.isBefore(DateTime.now());
+  /// Quantos meses um pagamento cobre, pelo tipo de plano.
+  int get planMonths => monthsForPlan(planType);
+
+  static int monthsForPlan(String? plan) => switch (plan) {
+        'Trimestral' => 3,
+        'Semestral' => 6,
+        'Anual' => 12,
+        _ => 1,
+      };
+
+  /// Dias até o vencimento (negativo = dias de atraso).
+  int? get daysUntilDue {
+    final due = nextPaymentDate;
+    if (due == null) return null;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return DateTime(due.year, due.month, due.day).difference(today).inDays;
   }
+
+  /// Situação real da mensalidade, calculada pelo vencimento:
+  /// isento › atrasado (venceu) › pendente (vence em até [dueSoonDays] dias)
+  /// › em dia.
+  PaymentStatus get effectivePaymentStatus {
+    if (paymentStatus == PaymentStatus.exempt) return PaymentStatus.exempt;
+    final days = daysUntilDue;
+    if (days == null) return PaymentStatus.pending;
+    if (days < 0) return PaymentStatus.overdue;
+    if (days <= dueSoonDays) return PaymentStatus.pending;
+    return PaymentStatus.paid;
+  }
+
+  static const dueSoonDays = 5;
+
+  /// Entra na cobrança: aluno atual (não arquivado nem inativo), não isento.
+  bool get isBillable =>
+      linkStatus != LinkStatus.archived &&
+      isActive &&
+      paymentStatus != PaymentStatus.exempt;
+
+  /// Verifica se pagamento está atrasado
+  bool get isPaymentOverdue =>
+      effectivePaymentStatus == PaymentStatus.overdue;
 
   /// Dias desde último treino
   int? get daysSinceLastWorkout {
@@ -177,7 +214,7 @@ extension PaymentStatusExtension on PaymentStatus {
   String get displayName {
     switch (this) {
       case PaymentStatus.paid:
-        return 'Pago';
+        return 'Em dia';
       case PaymentStatus.pending:
         return 'Pendente';
       case PaymentStatus.overdue:

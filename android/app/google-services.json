@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "540869919988",
+    "project_id": "time-lobao-teste",
+    "storage_bucket": "time-lobao-teste.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540869919988:android:dbb450ae48659523430aa1",
+        "android_client_info": {
+          "package_name": "br.com.timelobao.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXFedCa5it6Vvl3olPWDzIXrvfAVcB6Dc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

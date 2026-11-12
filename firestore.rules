@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Fechado até as regras definitivas da leva 0 serem publicadas.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

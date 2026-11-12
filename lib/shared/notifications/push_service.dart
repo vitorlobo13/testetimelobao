@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 /// Chave pública Web Push (Firebase Console → Cloud Messaging).
 /// Não é segredo: identifica o app para o serviço de push do navegador.
 const String kWebPushVapidKey =
-    'BGywemUJa-GaltcbYwTtzoUlRSCgQWdB6ynwbn57uDA_J9voRr5UmPLf8HN3Axr_87vItsbYnms8NYMYH-sDaIg';
+    'BIJFRIqaFWOPQ_cgrayYJZtTP9IZ-xpg6p3YYyEPprFrajn_hPDIG1G6up7UoQXe6UqnLqA8rJiNeoyIopcKRIk';
 
 /// Registra o aparelho para receber push (notificação com o app fechado).
 /// O token fica em `users/{uid}/fcmTokens/{token}`; as Cloud Functions

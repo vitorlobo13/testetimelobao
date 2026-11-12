@@ -370,10 +370,12 @@ exports.onSessionWritten = onDocumentWritten(
       const studentName = link.get("name") || "Seu aluno";
       const division = after.divisionName || after.workoutName || "o treino";
       const minutes = after.durationMinutes ? ` em ${after.durationMinutes} min` : "";
+      const pct = after.completionPercentage;
+      const partial = pct != null && pct < 100 ? ` (${pct}% dos exercícios)` : "";
       try {
         await notifyUser(link.get("trainerId"), {
           title: `${studentName} concluiu o treino 💪`,
-          body: `${division}${minutes}.`,
+          body: `${division}${minutes}${partial}.`,
           type: "session_completed",
           data: {linkId: link.id, sessionId: event.params.sessionId},
         });

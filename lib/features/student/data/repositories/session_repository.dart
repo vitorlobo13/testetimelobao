@@ -44,14 +44,18 @@ class SessionRepository {
         );
       });
 
-  /// Histórico (mais recentes primeiro).
+  /// Histórico de treinos FINALIZADOS (mais recentes primeiro). Treinos
+  /// começados e abandonados ficam gravados, mas não entram aqui.
   Stream<List<WorkoutSessionEntity>> watchHistory(String linkId,
           {int limit = 100}) =>
       _sessions(linkId)
           .orderBy('startTime', descending: true)
           .limit(limit)
           .snapshots()
-          .map((snap) => snap.docs.map(_fromDoc).toList());
+          .map((snap) => snap.docs
+              .map(_fromDoc)
+              .where((session) => session.completed)
+              .toList());
 
   Future<void> save({
     required String linkId,

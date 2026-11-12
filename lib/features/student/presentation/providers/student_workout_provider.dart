@@ -164,8 +164,9 @@ class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
       exerciseSessions: exerciseSessions,
     );
 
+    // Só grava quando o aluno concluir o primeiro exercício: abrir a tela
+    // só para olhar o treino não cria registro no histórico.
     state = state.copyWith(activeSession: session);
-    _persist(session);
   }
 
   /// Completa uma série

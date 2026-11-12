@@ -194,9 +194,13 @@ class _HistoryCardState extends State<_HistoryCard> {
                 color: AppColors.teal.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.check_circle_outline,
-                color: AppColors.lightTeal,
+              child: Icon(
+                widget.session.completionPercentage >= 100
+                    ? Icons.check_circle_outline
+                    : Icons.timelapse,
+                color: widget.session.completionPercentage >= 100
+                    ? AppColors.lightTeal
+                    : AppColors.warning,
                 size: 24,
               ),
             ),
@@ -217,6 +221,14 @@ class _HistoryCardState extends State<_HistoryCard> {
                     const Icon(Icons.timer, size: 14, color: AppColors.textTertiary),
                     const SizedBox(width: 4),
                     Text(durationStr, style: AppTextStyles.bodySmall),
+                    if (widget.session.completionPercentage < 100) ...[
+                      const SizedBox(width: 12),
+                      Text(
+                        '${widget.session.completionPercentage.toStringAsFixed(0)}% feito',
+                        style: AppTextStyles.bodySmall
+                            .copyWith(color: AppColors.warning),
+                      ),
+                    ],
                   ],
                 ),
               ],

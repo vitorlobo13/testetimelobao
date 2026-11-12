@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import 'push_service.dart';
 
 /// Notificação mostrada dentro do app (`users/{uid}/notifications`).
 /// As Cloud Functions criam; o usuário só lê, marca como lida ou apaga.
@@ -156,6 +157,103 @@ class NotificationsPage extends ConsumerWidget {
                   );
                 },
               ),
+      ),
+    );
+  }
+}
+
+final pushServiceProvider = Provider<PushService>((ref) => PushService());
+
+/// Cartão "Receber avisos no celular". Some quando o push já está ativo.
+/// Se a permissão já foi dada antes, só renova o registro do aparelho.
+class PushPromptCard extends ConsumerStatefulWidget {
+  const PushPromptCard({super.key});
+
+  @override
+  ConsumerState<PushPromptCard> createState() => _PushPromptCardState();
+}
+
+class _PushPromptCardState extends ConsumerState<PushPromptCard> {
+  bool _visible = false;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_check);
+  }
+
+  Future<void> _check() async {
+    final uid = ref.read(authProvider).user?.id;
+    final push = ref.read(pushServiceProvider);
+    if (uid == null || !await push.isSupported()) return;
+    if (await push.isGranted()) {
+      await push.registerToken(uid);
+      return;
+    }
+    if (mounted) setState(() => _visible = true);
+  }
+
+  Future<void> _enable() async {
+    final uid = ref.read(authProvider).user?.id;
+    if (uid == null) return;
+    setState(() => _busy = true);
+    final ok = await ref.read(pushServiceProvider).enable(uid);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _visible = !ok;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok
+          ? 'Pronto! Você vai receber os avisos neste aparelho.'
+          : 'As notificações foram bloqueadas. Libere nas configurações do navegador.'),
+      backgroundColor: ok ? AppColors.success : AppColors.warning,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_visible) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.teal.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.notifications_active, color: AppColors.lightTeal),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Receber avisos no celular', style: AppTextStyles.bodyLarge),
+                const SizedBox(height: 2),
+                Text(
+                  'No iPhone, adicione o app à tela inicial antes de ativar.',
+                  style: AppTextStyles.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: _busy ? null : _enable,
+            child: _busy
+                ? const SizedBox(
+                    width: 16, height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('ATIVAR'),
+          ),
+          IconButton(
+            tooltip: 'Agora não',
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => setState(() => _visible = false),
+          ),
+        ],
       ),
     );
   }

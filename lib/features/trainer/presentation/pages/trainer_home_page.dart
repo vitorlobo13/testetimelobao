@@ -112,6 +112,9 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Ativar push neste aparelho
+                          const PushPromptCard(),
+
                           // Cards de estatísticas
                           _buildStatsSection(dashboardState),
 

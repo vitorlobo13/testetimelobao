@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../../../shared/notifications/push_service.dart';
 
 /// Estado de Autenticação
 class AuthState {
@@ -173,7 +174,12 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> logout() => _repository.signOut();
+  Future<void> logout() async {
+    // Este aparelho para de receber push da conta que está saindo.
+    final uid = state.user?.id;
+    if (uid != null) await PushService().unregister(uid);
+    await _repository.signOut();
+  }
 
   void clearError() {
     state = state.copyWith(errorMessage: null);

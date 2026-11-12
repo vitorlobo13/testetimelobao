@@ -68,6 +68,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
                     if (workoutState.link != null &&
                         workoutState.link!.consentAt == null)
                       _buildConsentCard(),
+                    const PushPromptCard(),
                     workoutState.isLoading
                         ? _buildLoading()
                         : workoutState.currentWorkout == null

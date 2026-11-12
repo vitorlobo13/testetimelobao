@@ -174,11 +174,8 @@ class _HistoryCardState extends State<_HistoryCard> {
     final duration = widget.session.endTime?.difference(widget.session.startTime) ?? Duration.zero;
     final durationStr = '${duration.inMinutes} min';
 
-    final workoutDivisionName = widget.session.divisionId == 'div_1'
-        ? 'Treino A - Push'
-        : widget.session.divisionId == 'div_2'
-            ? 'Treino B - Pull'
-            : 'Treino C - Legs';
+    final workoutDivisionName =
+        widget.session.divisionName ?? widget.session.workoutName ?? 'Treino';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -251,17 +248,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                   ),
                   const SizedBox(height: 12),
                   ...widget.session.exerciseSessions.map((exSession) {
-                    final exName = exSession.workoutExerciseId == 'ex_1'
-                        ? 'Supino Reto com Barra'
-                        : exSession.workoutExerciseId == 'ex_2'
-                            ? 'Supino Inclinado com Halteres'
-                            : exSession.workoutExerciseId == 'ex_3'
-                                ? 'Desenvolvimento com Barra'
-                                : exSession.workoutExerciseId == 'ex_4'
-                                    ? 'Barra Fixa'
-                                    : exSession.workoutExerciseId == 'ex_5'
-                                        ? 'Remada Curvada'
-                                        : 'Exercício de Treino';
+                    final exName = exSession.exerciseName ?? 'Exercício';
 
                     final completedSetsCount = exSession.sets.where((s) => s.completed).length;
 

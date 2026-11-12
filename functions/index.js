@@ -308,3 +308,103 @@ exports.deleteStudentLink = onCall(async (request) => {
   await db.recursiveDelete(ref);
   return {deleted: true};
 });
+
+// ---------------------------------------------------------------------------
+// Notificações: treino concluído (para o personal) e treino novo (para o aluno)
+// ---------------------------------------------------------------------------
+
+const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+const {logger} = require("firebase-functions");
+
+/** Grava a notificação no app e tenta mandar push para os aparelhos. */
+async function notifyUser(uid, {title, body, type, data = {}}) {
+  if (!uid) return;
+  await db.collection(`users/${uid}/notifications`).add({
+    title,
+    body,
+    type,
+    data,
+    read: false,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+
+  const tokensSnap = await db.collection(`users/${uid}/fcmTokens`).get();
+  const tokens = tokensSnap.docs.map((d) => d.id);
+  if (tokens.length === 0) return;
+
+  const result = await admin.messaging().sendEachForMulticast({
+    tokens,
+    notification: {title, body},
+    data: {type, ...Object.fromEntries(
+        Object.entries(data).map(([k, v]) => [k, String(v)]))},
+    webpush: {fcmOptions: {link: "/"}},
+  });
+  // Remove tokens de aparelhos que não existem mais.
+  await Promise.all(result.responses.map((r, i) => {
+    const code = r.error?.code || "";
+    if (code.includes("registration-token-not-registered") ||
+        code.includes("invalid-registration-token")) {
+      return db.doc(`users/${uid}/fcmTokens/${tokens[i]}`).delete();
+    }
+    return null;
+  }));
+}
+
+/** Aluno concluiu um treino: atualiza o vínculo e avisa o personal. */
+exports.onSessionWritten = onDocumentWritten(
+    "studentLinks/{linkId}/sessions/{sessionId}",
+    async (event) => {
+      const before = event.data?.before?.data();
+      const after = event.data?.after?.data();
+      if (!after || !after.completed || before?.completed) return;
+
+      const linkRef = db.doc(`studentLinks/${event.params.linkId}`);
+      const link = await linkRef.get();
+      if (!link.exists) return;
+
+      await linkRef.update({
+        lastWorkoutDate: after.endTime || FieldValue.serverTimestamp(),
+        totalWorkouts: FieldValue.increment(1),
+      });
+
+      const studentName = link.get("name") || "Seu aluno";
+      const division = after.divisionName || after.workoutName || "o treino";
+      const minutes = after.durationMinutes ? ` em ${after.durationMinutes} min` : "";
+      try {
+        await notifyUser(link.get("trainerId"), {
+          title: `${studentName} concluiu o treino 💪`,
+          body: `${division}${minutes}.`,
+          type: "session_completed",
+          data: {linkId: link.id, sessionId: event.params.sessionId},
+        });
+      } catch (error) {
+        logger.error("Falha ao notificar personal", error);
+      }
+    },
+);
+
+/** Personal prescreveu um treino novo: avisa o aluno. */
+exports.onWorkoutWritten = onDocumentWritten(
+    "studentLinks/{linkId}/workouts/{workoutId}",
+    async (event) => {
+      const before = event.data?.before?.data();
+      const after = event.data?.after?.data();
+      if (!after || !after.isActive || before?.isActive) return;
+
+      const link = await db.doc(`studentLinks/${event.params.linkId}`).get();
+      const studentUid = link.get("studentUid");
+      if (!studentUid || link.get("linkStatus") !== "active") return;
+
+      const trainer = await db.doc(`users/${link.get("trainerId")}`).get();
+      try {
+        await notifyUser(studentUid, {
+          title: "Treino novo disponível",
+          body: `${trainer.get("name") || "Seu personal"} preparou "${after.name}" para você.`,
+          type: "workout_assigned",
+          data: {workoutId: event.params.workoutId},
+        });
+      } catch (error) {
+        logger.error("Falha ao notificar aluno", error);
+      }
+    },
+);

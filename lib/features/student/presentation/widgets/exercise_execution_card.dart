@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/exercise_video_player.dart';
 import '../../../trainer/domain/entities/workout_entity.dart';
 import '../../domain/entities/workout_session_entity.dart';
 
@@ -130,6 +131,23 @@ class ExerciseExecutionCard extends StatelessWidget {
                       label: 'Carga sugerida',
                       value: '${workoutExercise.load} kg',
                     ),
+                  if (workoutExercise.isGrouped) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.link, size: 18, color: AppColors.warning),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Conjugado: faça em sequência com o exercício '
+                            'marcado ao lado, sem descanso entre eles.',
+                            style: AppTextStyles.bodySmall
+                                .copyWith(color: AppColors.warning),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   if (workoutExercise.notes != null) ...[
                     const SizedBox(height: 12),
                     Container(
@@ -160,14 +178,11 @@ class ExerciseExecutionCard extends StatelessWidget {
                   if (workoutExercise.exercise.videoUrl != null && workoutExercise.exercise.videoUrl!.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     InkWell(
-                      onTap: () {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(
-                             content: Text('Abrindo vídeo explicativo...'),
-                             backgroundColor: AppColors.teal,
-                           ),
-                         );
-                      },
+                      onTap: () => showExerciseVideo(
+                        context,
+                        title: workoutExercise.exercise.name,
+                        videoUrl: workoutExercise.exercise.videoUrl!,
+                      ),
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(

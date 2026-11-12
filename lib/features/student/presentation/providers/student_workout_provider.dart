@@ -1,10 +1,15 @@
+import 'dart:async';
+import 'dart:developer' as developer;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../trainer/domain/entities/workout_entity.dart';
+import '../../../trainer/presentation/providers/workout_builder_provider.dart';
+import '../../data/repositories/session_repository.dart';
 import '../../domain/entities/workout_session_entity.dart';
-import '../../../trainer/domain/entities/exercise_entity.dart';
-
-
 
 /// Estado do treino do aluno
 class StudentWorkoutState {
@@ -14,65 +19,117 @@ class StudentWorkoutState {
   final bool isLoading;
   final String? errorMessage;
 
+  /// Vínculo ativo (null = aluno sem personal no momento).
+  final ActiveLink? link;
+
   const StudentWorkoutState({
     this.currentWorkout,
     this.activeSession,
     this.history = const [],
     this.isLoading = false,
     this.errorMessage,
+    this.link,
   });
 
   StudentWorkoutState copyWith({
     WorkoutEntity? currentWorkout,
+    bool clearWorkout = false,
     WorkoutSessionEntity? activeSession,
+    bool clearSession = false,
     List<WorkoutSessionEntity>? history,
     bool? isLoading,
     String? errorMessage,
+    ActiveLink? link,
+    bool clearLink = false,
   }) {
     return StudentWorkoutState(
-      currentWorkout: currentWorkout ?? this.currentWorkout,
-      activeSession: activeSession ?? this.activeSession,
+      currentWorkout:
+          clearWorkout ? null : (currentWorkout ?? this.currentWorkout),
+      activeSession: clearSession ? null : (activeSession ?? this.activeSession),
       history: history ?? this.history,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
+      link: clearLink ? null : (link ?? this.link),
     );
   }
 }
 
-/// Notifier do treino do aluno
+final sessionRepositoryProvider =
+    Provider<SessionRepository>((ref) => SessionRepository());
+
+/// Treino ativo, execução e histórico do aluno logado (Firestore).
 class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
   final _uuid = const Uuid();
+  StreamSubscription<ActiveLink?>? _linkSub;
+  StreamSubscription<WorkoutEntity?>? _workoutSub;
+  StreamSubscription<List<WorkoutSessionEntity>>? _historySub;
+
+  SessionRepository get _sessions => ref.read(sessionRepositoryProvider);
 
   @override
   StudentWorkoutState build() {
-    Future.microtask(() => loadCurrentWorkout());
-    return StudentWorkoutState(
-      isLoading: true,
-      history: _generateMockHistory(),
+    ref.onDispose(_cancelAll);
+    ref.listen(authProvider.select((a) => a.user?.id), (_, __) => _listen());
+    Future.microtask(_listen);
+    return const StudentWorkoutState(isLoading: true);
+  }
+
+  void _cancelAll() {
+    _linkSub?.cancel();
+    _workoutSub?.cancel();
+    _historySub?.cancel();
+  }
+
+  void _listen() {
+    _cancelAll();
+    final user = ref.read(authProvider).user;
+    if (user == null || !user.isStudent) {
+      state = const StudentWorkoutState();
+      return;
+    }
+    _linkSub = _sessions.watchActiveLink(user.id).listen(
+      (link) {
+        final changed = link?.linkId != state.link?.linkId;
+        state = link == null
+            ? state.copyWith(clearLink: true, clearWorkout: true, isLoading: false)
+            : state.copyWith(link: link);
+        if (changed) _listenLinkData(link);
+      },
+      onError: (Object e) => state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Erro ao carregar seu treino: $e',
+      ),
     );
   }
 
-  /// Carrega treino atual do aluno
-  Future<void> loadCurrentWorkout() async {
-    state = state.copyWith(isLoading: true);
-
-    try {
-      // TODO: Buscar treino do Firebase/Supabase
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Treino mockado para demonstração
-      final mockWorkout = _generateMockWorkout();
-
-      state = state.copyWith(
-        currentWorkout: mockWorkout,
-        isLoading: false,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Erro ao carregar treino',
-      );
+  void _listenLinkData(ActiveLink? link) {
+    _workoutSub?.cancel();
+    _historySub?.cancel();
+    if (link == null) {
+      state = state.copyWith(history: const [], isLoading: false);
+      return;
     }
+    _workoutSub = ref
+        .read(workoutRepositoryProvider)
+        .watchActiveWorkout(link.linkId)
+        .listen((workout) {
+      state = workout == null
+          ? state.copyWith(clearWorkout: true, isLoading: false)
+          : state.copyWith(currentWorkout: workout, isLoading: false);
+    });
+    _historySub = _sessions.watchHistory(link.linkId).listen((history) {
+      state = state.copyWith(history: history);
+    });
+  }
+
+  /// Mantido por compatibilidade (pull to refresh): reinicia a escuta.
+  Future<void> loadCurrentWorkout() async => _listen();
+
+  /// Aluno aceita o termo de uso dos dados de saúde (LGPD).
+  Future<void> acceptConsent() async {
+    final link = state.link;
+    if (link == null) return;
+    await _sessions.registerConsent(link.linkId);
   }
 
   /// Inicia uma nova sessão de treino
@@ -82,19 +139,15 @@ class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
 
     final division = workout.divisions.firstWhere((d) => d.id == divisionId);
 
-    // Cria sessões de exercícios
     final exerciseSessions = division.exercises.map((exercise) {
       final sets = List.generate(
         exercise.sets,
-        (index) => SetSessionEntity(
-          setNumber: index + 1,
-          completed: false,
-        ),
+        (index) => SetSessionEntity(setNumber: index + 1, completed: false),
       );
-
       return ExerciseSessionEntity(
         id: _uuid.v4(),
         workoutExerciseId: exercise.id,
+        exerciseName: exercise.exercise.name,
         sets: sets,
         completed: false,
       );
@@ -102,14 +155,17 @@ class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
 
     final session = WorkoutSessionEntity(
       id: _uuid.v4(),
-      studentId: 'student_123', // TODO: Pegar do usuário logado
+      studentId: ref.read(authProvider).user?.id ?? '',
       workoutId: workout.id,
+      workoutName: workout.name,
       divisionId: divisionId,
+      divisionName: division.name,
       startTime: DateTime.now(),
       exerciseSessions: exerciseSessions,
     );
 
     state = state.copyWith(activeSession: session);
+    _persist(session);
   }
 
   /// Completa uma série
@@ -117,337 +173,70 @@ class StudentWorkoutNotifier extends Notifier<StudentWorkoutState> {
     final session = state.activeSession;
     if (session == null) return;
 
-    final updatedExerciseSessions = List<ExerciseSessionEntity>.from(
-      session.exerciseSessions,
-    );
+    final exercises = List<ExerciseSessionEntity>.from(session.exerciseSessions);
+    final exerciseSession = exercises[exerciseIndex];
+    final sets = List<SetSessionEntity>.from(exerciseSession.sets);
 
-    final exerciseSession = updatedExerciseSessions[exerciseIndex];
-    final updatedSets = List<SetSessionEntity>.from(exerciseSession.sets);
-
-    updatedSets[setIndex] = updatedSets[setIndex].copyWith(
+    sets[setIndex] = sets[setIndex].copyWith(
       actualReps: reps,
       actualLoad: load,
       completedAt: DateTime.now(),
       completed: true,
     );
 
-    // Verifica se todas as séries foram completadas
-    final allSetsCompleted = updatedSets.every((s) => s.completed);
-
-    updatedExerciseSessions[exerciseIndex] = ExerciseSessionEntity(
+    final allSetsCompleted = sets.every((s) => s.completed);
+    exercises[exerciseIndex] = ExerciseSessionEntity(
       id: exerciseSession.id,
       workoutExerciseId: exerciseSession.workoutExerciseId,
-      sets: updatedSets,
+      exerciseName: exerciseSession.exerciseName,
+      sets: sets,
       completed: allSetsCompleted,
     );
 
-    final updatedSession = WorkoutSessionEntity(
-      id: session.id,
-      studentId: session.studentId,
-      workoutId: session.workoutId,
-      divisionId: session.divisionId,
-      startTime: session.startTime,
-      endTime: session.endTime,
-      completed: session.completed,
-      exerciseSessions: updatedExerciseSessions,
-    );
+    final updated = session.copyWith(exerciseSessions: exercises);
+    state = state.copyWith(activeSession: updated);
 
-    state = state.copyWith(activeSession: updatedSession);
+    // Grava a cada exercício concluído.
+    if (allSetsCompleted) _persist(updated);
   }
 
   /// Finaliza a sessão de treino
   Future<bool> finishSession() async {
     final session = state.activeSession;
     if (session == null) return false;
+    final completed = session.copyWith(endTime: DateTime.now(), completed: true);
+    final ok = await _persist(completed);
+    if (ok) state = state.copyWith(clearSession: true);
+    return ok;
+  }
 
+  /// Cancela a sessão atual (o que já foi gravado fica como treino
+  /// incompleto no histórico).
+  void cancelSession() {
+    state = state.copyWith(clearSession: true);
+  }
+
+  Future<bool> _persist(WorkoutSessionEntity session) async {
+    final link = state.link;
+    final user = ref.read(authProvider).user;
+    if (link == null || user == null) return false;
     try {
-      final completedSession = WorkoutSessionEntity(
-        id: session.id,
-        studentId: session.studentId,
-        workoutId: session.workoutId,
-        divisionId: session.divisionId,
-        startTime: session.startTime,
-        endTime: DateTime.now(),
-        completed: true,
-        exerciseSessions: session.exerciseSessions,
+      await _sessions.save(
+        linkId: link.linkId,
+        trainerId: link.trainerId,
+        studentUid: user.id,
+        session: session,
       );
-
-      // TODO: Salvar no Firebase/Supabase
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Adiciona ao histórico
-      final updatedHistory = [completedSession, ...state.history];
-
-      state = state.copyWith(
-        activeSession: null,
-        history: updatedHistory,
-      );
-
       return true;
-    } catch (e) {
-      state = state.copyWith(errorMessage: 'Erro ao finalizar treino');
+    } on FirebaseException catch (e) {
+      developer.log('Erro ao salvar sessão', error: e);
+      state = state.copyWith(errorMessage: 'Erro ao salvar treino: ${e.message}');
       return false;
     }
   }
-
-  /// Cancela a sessão atual
-  void cancelSession() {
-    state = state.copyWith(activeSession: null);
-  }
-
-  /// Gera treino mockado
-  WorkoutEntity _generateMockWorkout() {
-    return WorkoutEntity(
-      id: 'workout_1',
-      trainerId: 'trainer_123',
-      studentId: 'student_123',
-      name: 'Treino ABC - Hipertrofia',
-      description: 'Divisão Push/Pull/Legs focada em ganho de massa muscular',
-      divisions: [
-        WorkoutDivision(
-          id: 'div_1',
-          name: 'Treino A - Push (Peito, Ombro, Tríceps)',
-          description: 'Foco em empurrar',
-          order: 0,
-          exercises: [
-            WorkoutExercise(
-              id: 'ex_1',
-              exercise: const ExerciseEntity(
-                id: '1',
-                name: 'Supino Reto com Barra',
-                category: 'Peito',
-                muscleGroup: 'Peitoral Maior',
-                equipment: 'Barra',
-                difficulty: 'Intermediário',
-              ),
-              sets: 4,
-              reps: '8-10',
-              rest: '90',
-              load: '60',
-              notes: 'Controlar a descida, explodir na subida',
-              order: 0,
-            ),
-            WorkoutExercise(
-              id: 'ex_2',
-              exercise: const ExerciseEntity(
-                id: '2',
-                name: 'Supino Inclinado com Halteres',
-                category: 'Peito',
-                muscleGroup: 'Peitoral Superior',
-                equipment: 'Halteres',
-                difficulty: 'Intermediário',
-              ),
-              sets: 3,
-              reps: '10-12',
-              rest: '60',
-              load: '20',
-              order: 1,
-            ),
-            WorkoutExercise(
-              id: 'ex_3',
-              exercise: const ExerciseEntity(
-                id: '13',
-                name: 'Desenvolvimento com Barra',
-                category: 'Ombros',
-                muscleGroup: 'Deltóide',
-                equipment: 'Barra',
-                difficulty: 'Intermediário',
-              ),
-              sets: 3,
-              reps: '10-12',
-              rest: '60',
-              load: '30',
-              order: 2,
-            ),
-          ],
-        ),
-        WorkoutDivision(
-          id: 'div_2',
-          name: 'Treino B - Pull (Costas, Bíceps)',
-          description: 'Foco em puxar',
-          order: 1,
-          exercises: [
-            WorkoutExercise(
-              id: 'ex_4',
-              exercise: const ExerciseEntity(
-                id: '5',
-                name: 'Barra Fixa',
-                category: 'Costas',
-                muscleGroup: 'Dorsal',
-                equipment: 'Barra Fixa',
-                difficulty: 'Intermediário',
-              ),
-              sets: 4,
-              reps: '8-10',
-              rest: '90',
-              notes: 'Usar pegada pronada',
-              order: 0,
-            ),
-            WorkoutExercise(
-              id: 'ex_5',
-              exercise: const ExerciseEntity(
-                id: '6',
-                name: 'Remada Curvada',
-                category: 'Costas',
-                muscleGroup: 'Dorsal',
-                equipment: 'Barra',
-                difficulty: 'Intermediário',
-              ),
-              sets: 3,
-              reps: '10-12',
-              rest: '60',
-              load: '40',
-              order: 1,
-            ),
-          ],
-        ),
-        WorkoutDivision(
-          id: 'div_3',
-          name: 'Treino C - Legs (Pernas)',
-          description: 'Foco em membros inferiores',
-          order: 2,
-          exercises: [
-            WorkoutExercise(
-              id: 'ex_6',
-              exercise: const ExerciseEntity(
-                id: '9',
-                name: 'Agachamento Livre',
-                category: 'Pernas',
-                muscleGroup: 'Quadríceps',
-                equipment: 'Barra',
-                difficulty: 'Avançado',
-              ),
-              sets: 4,
-              reps: '8-10',
-              rest: '120',
-              load: '80',
-              notes: 'Descer até paralelo, manter costas retas',
-              order: 0,
-            ),
-            WorkoutExercise(
-              id: 'ex_7',
-              exercise: const ExerciseEntity(
-                id: '10',
-                name: 'Leg Press 45°',
-                category: 'Pernas',
-                muscleGroup: 'Quadríceps',
-                equipment: 'Máquina',
-                difficulty: 'Iniciante',
-              ),
-              sets: 3,
-              reps: '12-15',
-              rest: '90',
-              load: '100',
-              order: 1,
-            ),
-          ],
-        ),
-      ],
-      createdAt: DateTime.now().subtract(const Duration(days: 7)),
-      isActive: true,
-    );
-  }
-
-  /// Gera histórico de treinos mockado
-  List<WorkoutSessionEntity> _generateMockHistory() {
-    return [
-      WorkoutSessionEntity(
-        id: 'session_old_1',
-        studentId: 'student_123',
-        workoutId: 'workout_1',
-        divisionId: 'div_1',
-        startTime: DateTime.now().subtract(const Duration(days: 2, hours: 2)),
-        endTime: DateTime.now().subtract(const Duration(days: 2, hours: 1)),
-        completed: true,
-        exerciseSessions: [
-          ExerciseSessionEntity(
-            id: 'ex_sess_1',
-            workoutExerciseId: 'ex_1',
-            completed: true,
-            sets: [
-              SetSessionEntity(
-                setNumber: 1,
-                completed: true,
-                actualReps: 10,
-                actualLoad: 60,
-                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 45)),
-              ),
-              SetSessionEntity(
-                setNumber: 2,
-                completed: true,
-                actualReps: 10,
-                actualLoad: 60,
-                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 40)),
-              ),
-              SetSessionEntity(
-                setNumber: 3,
-                completed: true,
-                actualReps: 8,
-                actualLoad: 65,
-                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 35)),
-              ),
-            ],
-          ),
-          ExerciseSessionEntity(
-            id: 'ex_sess_2',
-            workoutExerciseId: 'ex_2',
-            completed: true,
-            sets: [
-              SetSessionEntity(
-                setNumber: 1,
-                completed: true,
-                actualReps: 12,
-                actualLoad: 20,
-                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 25)),
-              ),
-              SetSessionEntity(
-                setNumber: 2,
-                completed: true,
-                actualReps: 12,
-                actualLoad: 20,
-                completedAt: DateTime.now().subtract(const Duration(days: 2, hours: 1, minutes: 20)),
-              ),
-            ],
-          ),
-        ],
-      ),
-      WorkoutSessionEntity(
-        id: 'session_old_2',
-        studentId: 'student_123',
-        workoutId: 'workout_1',
-        divisionId: 'div_2',
-        startTime: DateTime.now().subtract(const Duration(days: 4, hours: 1)),
-        endTime: DateTime.now().subtract(const Duration(days: 4)),
-        completed: true,
-        exerciseSessions: [
-          ExerciseSessionEntity(
-            id: 'ex_sess_3',
-            workoutExerciseId: 'ex_4',
-            completed: true,
-            sets: [
-              SetSessionEntity(
-                setNumber: 1,
-                completed: true,
-                actualReps: 10,
-                completedAt: DateTime.now().subtract(const Duration(days: 4, minutes: 45)),
-              ),
-              SetSessionEntity(
-                setNumber: 2,
-                completed: true,
-                actualReps: 8,
-                completedAt: DateTime.now().subtract(const Duration(days: 4, minutes: 40)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ];
-  }
 }
 
-  /// Provider global do treino do aluno
-  final studentWorkoutProvider =
-      NotifierProvider<StudentWorkoutNotifier, StudentWorkoutState>(() {
-    return StudentWorkoutNotifier();
-  }
-  );
+final studentWorkoutProvider =
+    NotifierProvider<StudentWorkoutNotifier, StudentWorkoutState>(() {
+  return StudentWorkoutNotifier();
+});

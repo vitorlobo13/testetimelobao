@@ -1,4 +1,3 @@
-
 /// Sessão de treino do aluno
 class WorkoutSessionEntity {
   final String id;
@@ -10,6 +9,11 @@ class WorkoutSessionEntity {
   final bool completed;
   final List<ExerciseSessionEntity> exerciseSessions;
 
+  /// Nomes guardados junto da sessão para o histórico não depender do
+  /// treino (que pode ser trocado depois).
+  final String? workoutName;
+  final String? divisionName;
+
   const WorkoutSessionEntity({
     required this.id,
     required this.studentId,
@@ -19,6 +23,8 @@ class WorkoutSessionEntity {
     this.endTime,
     this.completed = false,
     required this.exerciseSessions,
+    this.workoutName,
+    this.divisionName,
   });
 
   /// Duração total da sessão
@@ -35,6 +41,25 @@ class WorkoutSessionEntity {
     final completedCount = exerciseSessions.where((e) => e.completed).length;
     return (completedCount / exerciseSessions.length) * 100;
   }
+
+  WorkoutSessionEntity copyWith({
+    DateTime? endTime,
+    bool? completed,
+    List<ExerciseSessionEntity>? exerciseSessions,
+  }) {
+    return WorkoutSessionEntity(
+      id: id,
+      studentId: studentId,
+      workoutId: workoutId,
+      divisionId: divisionId,
+      startTime: startTime,
+      endTime: endTime ?? this.endTime,
+      completed: completed ?? this.completed,
+      exerciseSessions: exerciseSessions ?? this.exerciseSessions,
+      workoutName: workoutName,
+      divisionName: divisionName,
+    );
+  }
 }
 
 /// Sessão de exercício individual
@@ -43,12 +68,14 @@ class ExerciseSessionEntity {
   final String workoutExerciseId;
   final List<SetSessionEntity> sets;
   final bool completed;
+  final String? exerciseName;
 
   const ExerciseSessionEntity({
     required this.id,
     required this.workoutExerciseId,
     required this.sets,
     this.completed = false,
+    this.exerciseName,
   });
 
   /// Total de séries completadas

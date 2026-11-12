@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/notifications/notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -84,81 +85,6 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
     );
   }
 
-  void _showNotificationsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text('NOTIFICAÇÕES', style: AppTextStyles.headlineMedium),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildNotificationItem(
-              icon: Icons.check_circle_outline,
-              color: AppColors.success,
-              title: 'Treino Concluído',
-              subtitle: 'Ana Paula Silva finalizou o Treino B.',
-              time: 'Há 10 min',
-            ),
-            const Divider(color: AppColors.surfaceLight),
-            _buildNotificationItem(
-              icon: Icons.warning_amber_rounded,
-              color: AppColors.error,
-              title: 'Mensalidade Atrasada',
-              subtitle: 'Pedro Oliveira está com pagamento pendente.',
-              time: 'Há 2 horas',
-            ),
-            const Divider(color: AppColors.surfaceLight),
-            _buildNotificationItem(
-              icon: Icons.local_fire_department,
-              color: AppColors.warning,
-              title: 'Foco no Treino',
-              subtitle: 'Carlos Mendes concluiu o 3º treino da semana.',
-              time: 'Há 1 dia',
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Fechar', style: TextStyle(color: AppColors.teal)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationItem({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required String time,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.headlineSmall.copyWith(fontSize: 14)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: AppTextStyles.bodyMedium.copyWith(fontSize: 12)),
-                const SizedBox(height: 2),
-                Text(time, style: AppTextStyles.bodySmall.copyWith(fontSize: 10)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -236,28 +162,8 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
         },
       ),
       actions: [
-        // Notificações
-        Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              color: AppColors.textPrimary,
-              onPressed: () => _showNotificationsDialog(context),
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: const BoxDecoration(
-                  color: AppColors.error,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
+        // Notificações (Firestore)
+        const NotificationBell(),
         const SizedBox(width: 8),
       ],
       flexibleSpace: FlexibleSpaceBar(

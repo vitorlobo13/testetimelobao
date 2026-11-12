@@ -669,32 +669,18 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
 
   // ABA 2: TREINOS
   Widget _buildWorkoutsTab() {
-    // Dados mockados para demonstração
+    // Treinos realizados pelo aluno (Firestore, tempo real)
+    final sessions =
+        ref.watch(studentSessionsProvider(_currentStudent.id)).value ?? const [];
     final workoutHistory = [
-      WorkoutHistoryItem(
-        workoutName: 'Treino A - Peito e Tríceps',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        duration: 65,
-        completed: true,
-      ),
-      WorkoutHistoryItem(
-        workoutName: 'Treino B - Costas e Bíceps',
-        date: DateTime.now().subtract(const Duration(days: 3)),
-        duration: 70,
-        completed: true,
-      ),
-      WorkoutHistoryItem(
-        workoutName: 'Treino C - Pernas',
-        date: DateTime.now().subtract(const Duration(days: 5)),
-        duration: 80,
-        completed: true,
-      ),
-      WorkoutHistoryItem(
-        workoutName: 'Treino D - Ombros',
-        date: DateTime.now().subtract(const Duration(days: 7)),
-        duration: 55,
-        completed: false,
-      ),
+      for (final session in sessions)
+        WorkoutHistoryItem(
+          workoutName:
+              session.divisionName ?? session.workoutName ?? 'Treino',
+          date: session.startTime,
+          duration: session.duration.inMinutes,
+          completed: session.completed,
+        ),
     ];
 
     return SingleChildScrollView(

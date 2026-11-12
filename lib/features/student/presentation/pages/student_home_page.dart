@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/notifications/notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -21,6 +22,8 @@ class StudentHomePage extends ConsumerStatefulWidget {
   @override
   ConsumerState<StudentHomePage> createState() => _StudentHomePageState();
 }
+
+const bool _dietEnabled = false;
 
 class _StudentHomePageState extends ConsumerState<StudentHomePage> {
   @override
@@ -60,11 +63,18 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
 
               // Conteúdo
               SliverToBoxAdapter(
-                child: workoutState.isLoading
-                    ? _buildLoading()
-                    : workoutState.currentWorkout == null
-                        ? _buildNoWorkout()
-                        : _buildContent(context, ref, workoutState),
+                child: Column(
+                  children: [
+                    if (workoutState.link != null &&
+                        workoutState.link!.consentAt == null)
+                      _buildConsentCard(),
+                    workoutState.isLoading
+                        ? _buildLoading()
+                        : workoutState.currentWorkout == null
+                            ? _buildNoWorkout()
+                            : _buildContent(context, ref, workoutState),
+                  ],
+                ),
               ),
             ],
           ),
@@ -125,6 +135,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
         ),
       ),
       actions: [
+        const NotificationBell(),
         IconButton(
           icon: const Icon(Icons.history, color: AppColors.textPrimary),
           onPressed: () {
@@ -154,6 +165,42 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
     );
   }
 
+  /// Termo de consentimento (LGPD) mostrado no primeiro acesso.
+  Widget _buildConsentCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.teal),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Uso dos seus dados', style: AppTextStyles.headlineSmall),
+          const SizedBox(height: 8),
+          Text(
+            'Para montar e acompanhar seus treinos, seu personal registra '
+            'informações como medidas, avaliações físicas, anamnese e o '
+            'histórico dos treinos. Esses dados ficam visíveis só para você '
+            'e para o seu personal, e são apagados se você sair do time.',
+            style: AppTextStyles.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: () =>
+                  ref.read(studentWorkoutProvider.notifier).acceptConsent(),
+              child: const Text('Li e concordo'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildContent(
     BuildContext context,
     WidgetRef ref,
@@ -173,7 +220,9 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
 
           const SizedBox(height: 24),
 
-          // SEÇÃO: Dieta
+          // SEÇÃO: Dieta (ligada ao Firestore na leva 3; até lá fica oculta
+          // para o aluno não ver uma dieta de exemplo como se fosse dele)
+          if (_dietEnabled) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -210,6 +259,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
             _buildNoDietCard(),
 
           const SizedBox(height: 24),
+          ],
 
           // Título das divisões
           Text(

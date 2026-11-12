@@ -5,12 +5,20 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../student/domain/entities/workout_session_entity.dart';
+import '../../../student/presentation/providers/student_workout_provider.dart';
 import '../../domain/entities/student_entity.dart';
 import '../../domain/entities/workout_entity.dart';
 import '../pages/create_workout_page.dart';
 import '../providers/trainer_provider.dart';
 import '../providers/workout_builder_provider.dart';
 import 'section_card.dart';
+
+/// Treinos realizados (sessões) de um aluno, mais recentes primeiro.
+final studentSessionsProvider =
+    StreamProvider.family<List<WorkoutSessionEntity>, String>(
+  (ref, linkId) => ref.watch(sessionRepositoryProvider).watchHistory(linkId),
+);
 
 /// Treinos de um aluno, em tempo real (`studentLinks/{id}/workouts`).
 final studentWorkoutsProvider =

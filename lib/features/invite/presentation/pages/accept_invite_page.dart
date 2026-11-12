@@ -51,10 +51,13 @@ class AcceptInvitePage extends ConsumerWidget {
                 }
                 final user = auth.user;
                 if (user != null && !user.isStudent) {
-                  return const _Message(
+                  return _Message(
                     icon: Icons.person_off,
-                    text: 'Você está logado como personal/admin. '
-                        'Saia da conta para aceitar este convite como aluno.',
+                    text: 'Você está logado como ${user.email}, que é uma conta '
+                        'de personal/admin. Saia dela para aceitar este '
+                        'convite como aluno.',
+                    actionLabel: 'Sair desta conta',
+                    onAction: () => ref.read(authProvider.notifier).logout(),
                   );
                 }
                 return _InviteForm(token: token, invite: invite, loggedIn: user);
@@ -68,9 +71,16 @@ class AcceptInvitePage extends ConsumerWidget {
 }
 
 class _Message extends StatelessWidget {
-  const _Message({required this.icon, required this.text});
+  const _Message({
+    required this.icon,
+    required this.text,
+    this.actionLabel,
+    this.onAction,
+  });
   final IconData icon;
   final String text;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -83,10 +93,13 @@ class _Message extends StatelessWidget {
           const SizedBox(height: 16),
           Text(text, textAlign: TextAlign.center, style: AppTextStyles.bodyLarge),
           const SizedBox(height: 24),
-          TextButton(
-            onPressed: () => context.go('/login'),
-            child: const Text('Ir para o login'),
-          ),
+          if (onAction != null)
+            FilledButton(onPressed: onAction, child: Text(actionLabel ?? 'OK'))
+          else
+            TextButton(
+              onPressed: () => context.go('/login'),
+              child: const Text('Ir para o login'),
+            ),
         ],
       ),
     );

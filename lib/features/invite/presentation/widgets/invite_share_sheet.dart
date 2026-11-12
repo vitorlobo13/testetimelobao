@@ -97,7 +97,7 @@ class _InviteShareSheetState extends State<_InviteShareSheet> {
             }
             final invite = snapshot.data!;
             final validUntil =
-                DateFormat("dd/MM 'às' HH:mm", 'pt_BR').format(invite.expiresAt);
+                DateFormat("dd/MM 'às' HH:mm", 'pt_BR').format(invite.expiresAt.toLocal());
             return Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,

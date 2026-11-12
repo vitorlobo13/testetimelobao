@@ -63,13 +63,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              if (emailController.text.contains('@')) {
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.contains('@')) {
+                final messenger = ScaffoldMessenger.of(context);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
+                final sent = await ref
+                    .read(authProvider.notifier)
+                    .sendPasswordReset(email);
+                messenger.showSnackBar(
                   SnackBar(
-                    content: Text('Link de redefinição enviado para ${emailController.text}'),
-                    backgroundColor: AppColors.success,
+                    content: Text(sent
+                        ? 'Link de redefinição enviado para $email'
+                        : ref.read(authProvider).errorMessage ??
+                            'Não foi possível enviar o e-mail.'),
+                    backgroundColor:
+                        sent ? AppColors.success : AppColors.error,
                   ),
                 );
               } else {
@@ -109,21 +118,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (!mounted) return;
 
     if (success) {
-      final user = ref.read(authProvider).user;
-      
+      // O go_router leva para a área certa (personal/aluno/admin).
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Login realizado com sucesso!'),
           backgroundColor: AppColors.success,
         ),
       );
-
-      // Navega baseado no tipo de usuário
-      if (user?.isTrainer == true) {
-        Navigator.of(context).pushReplacementNamed('/trainer/home');
-      } else {
-        Navigator.of(context).pushReplacementNamed('/student/home');
-      }
     } else {
       // Mostra erro
       final error = ref.read(authProvider).errorMessage;

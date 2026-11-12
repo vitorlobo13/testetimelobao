@@ -1,7 +1,108 @@
 rules_version = '2';
+
+// Regras do Time Lobão. Princípios:
+// - o papel vem do custom claim `role` (definido só pelas Cloud Functions);
+// - personal só enxerga os vínculos (studentLinks) em que é o trainerId;
+// - aluno só enxerga o PRÓPRIO vínculo ATIVO e grava apenas o que é dele;
+// - admin só mexe na configuração e lê a lista de usuários.
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Fechado até as regras definitivas da leva 0 serem publicadas.
+
+    function signedIn() { return request.auth != null; }
+    function role() { return signedIn() ? request.auth.token.role : null; }
+    function isAdmin() { return role() == 'admin'; }
+    function isTrainer() { return role() == 'trainer'; }
+    function isStudent() { return role() == 'student'; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // Configuração global (chave do cadastro aberto etc.)
+    match /config/{doc} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Perfil: criado pelas Functions; o próprio usuário edita só dados básicos.
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow update: if isSelf(uid) && onlyChanges(['name', 'photoUrl', 'phone', 'updatedAt']);
+      allow create, delete: if false;
+
+      match /notifications/{id} {
+        allow read, delete: if isSelf(uid);
+        allow update: if isSelf(uid) && onlyChanges(['read']);
+        allow create: if false;
+      }
+
+      match /fcmTokens/{token} {
+        allow read, write: if isSelf(uid);
+      }
+    }
+
+    // Convites: só via Cloud Functions.
+    match /invites/{token} {
+      allow read, write: if false;
+    }
+
+    // Catálogo de exercícios e modelos de cada personal.
+    match /trainers/{trainerId}/{document=**} {
+      allow read, write: if isTrainer() && isSelf(trainerId);
+    }
+
+    // Vínculo aluno ↔ personal e tudo que pertence a ele.
+    match /studentLinks/{linkId} {
+      function linkData() {
+        return get(/databases/$(database)/documents/studentLinks/$(linkId)).data;
+      }
+      function ownsLink() {
+        return isTrainer() && linkData().trainerId == request.auth.uid;
+      }
+      function isLinkStudent() {
+        return isStudent()
+          && linkData().studentUid == request.auth.uid
+          && linkData().status == 'active';
+      }
+
+      allow read: if (isTrainer() && resource.data.trainerId == request.auth.uid)
+        || (isStudent() && resource.data.studentUid == request.auth.uid
+            && resource.data.status == 'active');
+
+      // O personal cria o vínculo sem aluno; o aluno é ligado pela Function
+      // de aceite do convite.
+      allow create: if isTrainer()
+        && request.resource.data.trainerId == request.auth.uid
+        && request.resource.data.get('studentUid', null) == null;
+
+      allow update: if (isTrainer()
+          && resource.data.trainerId == request.auth.uid
+          && request.resource.data.trainerId == resource.data.trainerId
+          && request.resource.data.get('studentUid', null) == resource.data.get('studentUid', null))
+        || (isStudent()
+          && resource.data.studentUid == request.auth.uid
+          && resource.data.status == 'active'
+          && onlyChanges(['consentAt', 'consentVersion']));
+
+      allow delete: if isTrainer() && resource.data.trainerId == request.auth.uid;
+
+      // Treinos executados: o aluno registra os próprios.
+      match /sessions/{sessionId} {
+        allow read: if ownsLink() || isLinkStudent();
+        allow create, update: if ownsLink()
+          || (isLinkStudent() && request.resource.data.studentUid == request.auth.uid);
+        allow delete: if ownsLink();
+      }
+
+      // Treinos, avaliações, anamnese, dietas e pagamentos: o personal
+      // escreve, o aluno do vínculo ativo só lê.
+      match /{collection}/{docId} {
+        allow read: if ownsLink() || isLinkStudent();
+        allow write: if ownsLink() && collection != 'sessions';
+      }
+    }
+
+    // Qualquer outro caminho: fechado.
     match /{document=**} {
       allow read, write: if false;
     }

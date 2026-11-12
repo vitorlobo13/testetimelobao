@@ -43,7 +43,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Dashboard',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                     },
                   ),
                   _buildMenuItem(
@@ -52,7 +52,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Meus Alunos',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const StudentsListPage(),
@@ -66,7 +66,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Relatório de frequência',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const FrequencyReportPage(),
@@ -80,7 +80,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Biblioteca de Treinos',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const WorkoutLibraryPage(),
@@ -95,7 +95,7 @@ class CustomDrawer extends ConsumerWidget {
                     subtitle: '+1800 vídeos',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const ExerciseVideosPage(),
@@ -109,7 +109,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Avaliações Físicas',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const PhysicalAssessmentPage(),
@@ -123,7 +123,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Nutrição e Dietas',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const DietLibraryPage(),
@@ -137,7 +137,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Anamnese',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const AnamnesePage(),
@@ -157,7 +157,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Gestão Financeira',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const FinancialManagementPage(),
@@ -171,7 +171,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Marketing',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const FeaturePlaceholderPage(
@@ -188,7 +188,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Relatórios',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const FeaturePlaceholderPage(
@@ -211,7 +211,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Configurações',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const FeaturePlaceholderPage(
@@ -228,7 +228,7 @@ class CustomDrawer extends ConsumerWidget {
                     title: 'Ajuda e Suporte',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.popUntil(context, ModalRoute.withName('/trainer/home'));
+                      Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const FeaturePlaceholderPage(
@@ -429,10 +429,8 @@ class CustomDrawer extends ConsumerWidget {
           );
 
           if (shouldLogout == true && context.mounted) {
+            // O go_router volta para o login quando a sessão termina.
             await ref.read(authProvider.notifier).logout();
-            if (context.mounted) {
-              Navigator.of(context).pushReplacementNamed('/login');
-            }
           }
         },
       ),

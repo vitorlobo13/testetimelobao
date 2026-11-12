@@ -24,6 +24,9 @@ class UserEntity {
   /// Verifica se é Aluno
   bool get isStudent => userType == UserType.student;
 
+  /// Verifica se é a conta administradora (só convida personais)
+  bool get isAdmin => userType == UserType.admin;
+
   @override
   String toString() {
     return 'UserEntity(id: $id, name: $name, email: $email, type: $userType)';
@@ -34,6 +37,7 @@ class UserEntity {
 enum UserType {
   trainer,  // Professor/Personal Trainer
   student,  // Aluno
+  admin,    // Conta administradora compartilhada
 }
 
 /// Extensão para converter string em enum
@@ -44,6 +48,8 @@ extension UserTypeExtension on UserType {
         return 'trainer';
       case UserType.student:
         return 'student';
+      case UserType.admin:
+        return 'admin';
     }
   }
 
@@ -53,6 +59,8 @@ extension UserTypeExtension on UserType {
         return UserType.trainer;
       case 'student':
         return UserType.student;
+      case 'admin':
+        return UserType.admin;
       default:
         throw Exception('Invalid user type: $value');
     }

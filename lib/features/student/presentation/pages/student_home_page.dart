@@ -145,6 +145,11 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
             );
           },
         ),
+        IconButton(
+          tooltip: 'Sair',
+          icon: const Icon(Icons.logout, color: AppColors.textPrimary),
+          onPressed: () => ref.read(authProvider.notifier).logout(),
+        ),
       ],
     );
   }

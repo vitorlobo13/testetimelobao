@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:async';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
 
@@ -22,7 +21,6 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _setupAnimations();
-    _navigateToHome();
   }
 
   void _setupAnimations() {
@@ -48,13 +46,8 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
   }
 
-  Future<void> _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted) {
-      // TODO: Navegar para tela de login/home
-       Navigator.of(context).pushReplacementNamed('/login');
-    }
-  }
+  // A navegação a partir do splash é feita pelo go_router (app_router.dart)
+  // assim que o Firebase informa se existe sessão salva.
 
   @override
   void dispose() {

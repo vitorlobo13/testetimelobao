@@ -87,13 +87,7 @@ class _ProfileSelectionPageState extends ConsumerState<ProfileSelectionPage>
           backgroundColor: AppColors.success,
         ),
       );
-
-      // Navega baseado no tipo de usuário
-      if (_selectedProfile == UserType.trainer) {
-        Navigator.of(context).pushReplacementNamed('/trainer/home');
-      } else {
-        Navigator.of(context).pushReplacementNamed('/student/home');
-      }
+      // O go_router leva para a área do perfil escolhido.
     } else {
       final error = ref.read(authProvider).errorMessage;
       if (error != null) {

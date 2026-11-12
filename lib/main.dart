@@ -4,16 +4,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
+import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
-import 'splash/splash_screen.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-import 'features/auth/presentation/pages/register_page.dart';
-import 'features/trainer/presentation/pages/trainer_home_page.dart';
-import 'features/student/presentation/pages/student_home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // URLs limpas na web (/convite/abc em vez de /#/convite/abc)
+  usePathUrlStrategy();
   
   // Inicializar localização para datas em português
   await initializeDateFormatting('pt_BR', null);
@@ -36,16 +36,17 @@ void main() async {
 }
 
 /// Aplicativo Principal Time Lobão
-class TimeLobaoApp extends StatelessWidget {
+class TimeLobaoApp extends ConsumerWidget {
   const TimeLobaoApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'Time Lobão',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      
+      routerConfig: ref.watch(appRouterProvider),
+
       // Localizações
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -57,16 +58,6 @@ class TimeLobaoApp extends StatelessWidget {
         Locale('en', 'US'),
       ],
       locale: const Locale('pt', 'BR'),
-
-      // Rotas
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginPage(),
-        '/register': (context) => const RegisterPage(),
-        '/trainer/home': (context) => const TrainerHomePage(),
-        '/student/home': (context) => const StudentHomePage(),
-      },
     );
   }
 }

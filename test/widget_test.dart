@@ -1,23 +1,37 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:time_lobao/features/auth/data/repositories/auth_repository.dart';
+import 'package:time_lobao/features/auth/presentation/providers/auth_provider.dart';
 import 'package:time_lobao/main.dart';
 
+/// Repositório falso: ninguém logado, sem tocar no Firebase.
+class _LoggedOutAuthRepository implements AuthRepository {
+  @override
+  Stream<User?> authStateChanges() => Stream<User?>.value(null);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
-  testWidgets('App starts with splash screen displaying title and slogan', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('Splash mostra a marca e, sem sessão, leva ao login',
+      (WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: TimeLobaoApp(),
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(_LoggedOutAuthRepository()),
+        ],
+        child: const TimeLobaoApp(),
       ),
     );
 
-    // Verify that the title "TIME LOBÃO" is shown.
     expect(find.text('TIME LOBÃO'), findsOneWidget);
-
-    // Verify that the slogan is shown.
     expect(find.text('QUEM ACORDA CEDO BEBE ÁGUA LIMPA'), findsOneWidget);
 
-    // Pump to let the navigation delayed timer fire and finish.
     await tester.pumpAndSettle();
+
+    // Sem usuário logado o go_router redireciona para o login.
+    expect(find.text('QUEM ACORDA CEDO BEBE ÁGUA LIMPA'), findsNothing);
   });
 }

@@ -1,5 +1,11 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
+
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/repositories/diet_repository.dart';
+import 'diet_provider.dart';
 import '../../domain/entities/meal_entity.dart';
 
 /// Modelo de template de dieta da biblioteca do professor.
@@ -112,26 +118,52 @@ class DietLibraryState {
 
 /// Notifier para gerenciar a biblioteca de templates de dietas.
 class DietLibraryNotifier extends Notifier<DietLibraryState> {
-  final _uuid = const Uuid();
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _sub;
+
+  String? get _trainerId {
+    final user = ref.read(authProvider).user;
+    return (user != null && user.isTrainer) ? user.id : null;
+  }
+
+  CollectionReference<Map<String, dynamic>> _col(String trainerId) =>
+      ref.read(dietRepositoryProvider).templates(trainerId);
 
   @override
   DietLibraryState build() {
-    Future.microtask(() => _loadInitialTemplates());
+    ref.onDispose(() => _sub?.cancel());
+    Future.microtask(_listen);
     return const DietLibraryState(isLoading: true);
   }
 
-  /// Carrega templates iniciais (mockados).
-  /// TODO: Substituir pela integração real com Firestore.
-  Future<void> _loadInitialTemplates() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    state = state.copyWith(
-      templates: _buildMockTemplates(),
-      isLoading: false,
-    );
+  /// Modelos do personal (`trainers/{uid}/dietTemplates`). No primeiro
+  /// acesso recebe os modelos padrão abaixo, que ele pode editar ou apagar.
+  Future<void> _listen() async {
+    await _sub?.cancel();
+    final trainerId = _trainerId;
+    if (trainerId == null) {
+      state = const DietLibraryState();
+      return;
+    }
+    final meta = FirebaseFirestore.instance.doc('trainers/$trainerId/meta/dietTemplates');
+    final seeded = await meta.get();
+    if (!(seeded.data()?['seeded'] == true)) {
+      final batch = FirebaseFirestore.instance.batch();
+      for (final t in _buildMockTemplates()) {
+        batch.set(_col(trainerId).doc(), _toMap(t));
+      }
+      batch.set(meta, {'seeded': true, 'seededAt': FieldValue.serverTimestamp()});
+      await batch.commit();
+    }
+    _sub = _col(trainerId).snapshots().listen((snap) {
+      state = DietLibraryState(
+        templates: snap.docs.map(_fromDoc).toList()
+          ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
+      );
+    });
   }
 
   /// Adiciona um novo template à biblioteca.
-  void addTemplate({
+  Future<void> addTemplate({
     required String name,
     required String description,
     required String category,
@@ -140,9 +172,11 @@ class DietLibraryNotifier extends Notifier<DietLibraryState> {
     double? targetProtein,
     double? targetCarbs,
     double? targetFats,
-  }) {
-    final template = DietTemplateModel(
-      id: _uuid.v4(),
+  }) async {
+    final trainerId = _trainerId;
+    if (trainerId == null) return;
+    await _col(trainerId).add(_toMap(DietTemplateModel(
+      id: '',
       name: name,
       description: description,
       category: category,
@@ -152,25 +186,53 @@ class DietLibraryNotifier extends Notifier<DietLibraryState> {
       targetProtein: targetProtein,
       targetCarbs: targetCarbs,
       targetFats: targetFats,
-    );
-
-    state = state.copyWith(
-      templates: [...state.templates, template],
-    );
+    )));
   }
 
   /// Atualiza um template existente.
-  void updateTemplate(DietTemplateModel updated) {
-    final updatedList = state.templates
-        .map((t) => t.id == updated.id ? updated.copyWith(updatedAt: DateTime.now()) : t)
-        .toList();
-    state = state.copyWith(templates: updatedList);
+  Future<void> updateTemplate(DietTemplateModel updated) async {
+    final trainerId = _trainerId;
+    if (trainerId == null) return;
+    await _col(trainerId).doc(updated.id).set({
+      ..._toMap(updated),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   /// Remove um template pelo ID.
-  void deleteTemplate(String id) {
-    state = state.copyWith(
-      templates: state.templates.where((t) => t.id != id).toList(),
+  Future<void> deleteTemplate(String id) async {
+    final trainerId = _trainerId;
+    if (trainerId == null) return;
+    await _col(trainerId).doc(id).delete();
+  }
+
+  static Map<String, dynamic> _toMap(DietTemplateModel t) => {
+        'name': t.name,
+        'description': t.description,
+        'category': t.category,
+        'targetCalories': t.targetCalories,
+        'targetProtein': t.targetProtein,
+        'targetCarbs': t.targetCarbs,
+        'targetFats': t.targetFats,
+        'meals': t.meals.map(DietRepository.mealToMap).toList(),
+        'createdAt': Timestamp.fromDate(t.createdAt),
+      };
+
+  static DietTemplateModel _fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data() ?? const <String, dynamic>{};
+    DateTime? date(Object? v) => v is Timestamp ? v.toDate() : null;
+    return DietTemplateModel(
+      id: doc.id,
+      name: d['name'] as String? ?? '',
+      description: d['description'] as String? ?? '',
+      category: d['category'] as String? ?? 'Geral',
+      meals: DietRepository.mealsFromList(d['meals']),
+      createdAt: date(d['createdAt']) ?? DateTime.now(),
+      updatedAt: date(d['updatedAt']),
+      targetCalories: (d['targetCalories'] as num?)?.toDouble(),
+      targetProtein: (d['targetProtein'] as num?)?.toDouble(),
+      targetCarbs: (d['targetCarbs'] as num?)?.toDouble(),
+      targetFats: (d['targetFats'] as num?)?.toDouble(),
     );
   }
 

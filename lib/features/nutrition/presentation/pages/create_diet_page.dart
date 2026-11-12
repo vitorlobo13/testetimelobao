@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../trainer/domain/entities/student_entity.dart';
@@ -411,7 +412,7 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
 
     final success = await ref.read(dietProvider.notifier).saveDiet(
           studentId: widget.student.id,
-          trainerId: 'trainer_123', // TODO: Pegar do usuário logado
+          trainerId: ref.read(authProvider).user!.id,
           name: _dietNameController.text,
           description: _dietDescriptionController.text.isEmpty
               ? null

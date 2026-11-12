@@ -24,18 +24,16 @@ class StudentHomePage extends ConsumerStatefulWidget {
   ConsumerState<StudentHomePage> createState() => _StudentHomePageState();
 }
 
-const bool _dietEnabled = false;
+const bool _dietEnabled = true;
 
 class _StudentHomePageState extends ConsumerState<StudentHomePage> {
   @override
   void initState() {
     super.initState();
-    // Carrega dieta quando o widget é inicializado
+    // Carrega a dieta do vínculo ativo assim que ele for conhecido.
     Future.microtask(() {
-      final user = ref.read(authProvider).user;
-      if (user != null) {
-        ref.read(dietProvider.notifier).loadDiet(user.id);
-      }
+      final linkId = ref.read(studentWorkoutProvider).link?.linkId;
+      if (linkId != null) ref.read(dietProvider.notifier).loadDiet(linkId);
     });
   }
 
@@ -43,6 +41,9 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final workoutState = ref.watch(studentWorkoutProvider);
+    ref.listen(studentWorkoutProvider.select((s) => s.link?.linkId), (_, linkId) {
+      if (linkId != null) ref.read(dietProvider.notifier).loadDiet(linkId);
+    });
     final userName = authState.user?.name.split(' ').first ?? 'Aluno';
 
     return Scaffold(
@@ -51,9 +52,9 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
         child: RefreshIndicator(
           onRefresh: () async {
             await ref.read(studentWorkoutProvider.notifier).loadCurrentWorkout();
-            final user = ref.read(authProvider).user;
-            if (user != null) {
-              await ref.read(dietProvider.notifier).loadDiet(user.id);
+            final linkId = ref.read(studentWorkoutProvider).link?.linkId;
+            if (linkId != null) {
+              await ref.read(dietProvider.notifier).loadDiet(linkId);
             }
           },
           color: AppColors.teal,
@@ -239,7 +240,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => DietViewPage(
-                          studentId: ref.read(authProvider).user!.id,
+                          studentId: ref.read(studentWorkoutProvider).link!.linkId,
                         ),
                       ),
                     );
@@ -397,7 +398,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => DietViewPage(
-              studentId: ref.read(authProvider).user!.id,
+              studentId: ref.read(studentWorkoutProvider).link!.linkId,
             ),
           ),
         );

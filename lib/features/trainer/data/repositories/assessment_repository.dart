@@ -26,12 +26,21 @@ class AssessmentRepository {
       .snapshots()
       .map((snap) => snap.docs.map((d) => _fromDoc(d, linkId)).toList());
 
-  Future<void> add(PhysicalMeasurementEntity m, {required String recordedBy}) =>
-      _col(m.studentId).add({
-        ..._toMap(m),
-        'recordedBy': recordedBy,
-        'createdAt': FieldValue.serverTimestamp(),
+  Future<void> add(PhysicalMeasurementEntity m,
+      {required String recordedBy}) async {
+    await _col(m.studentId).add({
+      ..._toMap(m),
+      'recordedBy': recordedBy,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    // O personal já marca a data da última avaliação no vínculo (para as
+    // Atualizações); as medidas lançadas pelo aluno a Function atualiza.
+    if (recordedBy == 'trainer') {
+      await _firestore.doc('studentLinks/${m.studentId}').update({
+        'lastAssessmentAt': FieldValue.serverTimestamp(),
       });
+    }
+  }
 
   Future<void> delete(String linkId, String id) => _col(linkId).doc(id).delete();
 

@@ -14,6 +14,7 @@ class StudentEntity {
   final double? weight;
   final double? height;
   final int? age;
+  final DateTime? birthDate;
   final Gender? gender;
   
   // Plano e pagamento
@@ -24,8 +25,13 @@ class StudentEntity {
   
   // Treino atual
   final String? currentWorkoutId;
+  final String? currentWorkoutName;
+  final DateTime? currentWorkoutEndDate;
   final DateTime? lastWorkoutDate;
   final int totalWorkouts;
+
+  // Última avaliação física (mantido pela Function e pelo app do personal)
+  final DateTime? lastAssessmentAt;
 
   // Vínculo com a conta do aluno (preenchido quando ele aceita o convite)
   final String? studentUid;
@@ -44,14 +50,18 @@ class StudentEntity {
     this.weight,
     this.height,
     this.age,
+    this.birthDate,
     this.gender,
     this.planType,
     this.monthlyFee,
     this.nextPaymentDate,
     this.paymentStatus = PaymentStatus.pending,
     this.currentWorkoutId,
+    this.currentWorkoutName,
+    this.currentWorkoutEndDate,
     this.lastWorkoutDate,
     this.totalWorkouts = 0,
+    this.lastAssessmentAt,
     this.studentUid,
     this.linkStatus = LinkStatus.pending,
   });
@@ -69,6 +79,7 @@ class StudentEntity {
     double? weight,
     double? height,
     int? age,
+    DateTime? birthDate,
     Gender? gender,
     String? planType,
     double? monthlyFee,
@@ -92,17 +103,33 @@ class StudentEntity {
       weight: weight ?? this.weight,
       height: height ?? this.height,
       age: age ?? this.age,
+      birthDate: birthDate ?? this.birthDate,
       gender: gender ?? this.gender,
       planType: planType ?? this.planType,
       monthlyFee: monthlyFee ?? this.monthlyFee,
       nextPaymentDate: nextPaymentDate ?? this.nextPaymentDate,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       currentWorkoutId: currentWorkoutId ?? this.currentWorkoutId,
+      currentWorkoutName: currentWorkoutName,
+      currentWorkoutEndDate: currentWorkoutEndDate,
       lastWorkoutDate: lastWorkoutDate ?? this.lastWorkoutDate,
       totalWorkouts: totalWorkouts ?? this.totalWorkouts,
+      lastAssessmentAt: lastAssessmentAt,
       studentUid: studentUid,
       linkStatus: linkStatus ?? this.linkStatus,
     );
+  }
+
+  /// Idade calculada pela data de nascimento (ou a idade informada).
+  int? get currentAge {
+    final b = birthDate;
+    if (b == null) return age;
+    final now = DateTime.now();
+    var years = now.year - b.year;
+    if (now.month < b.month || (now.month == b.month && now.day < b.day)) {
+      years--;
+    }
+    return years;
   }
 
   /// Calcula IMC

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/whatsapp.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../trainer/domain/entities/student_entity.dart';
 import '../../data/payment_repository.dart';
@@ -35,15 +35,7 @@ String dueLabel(StudentEntity s) {
 /// Abre o WhatsApp com uma mensagem de lembrete da mensalidade.
 Future<void> chargeOnWhatsApp(BuildContext context, StudentEntity s,
     {String? trainerName}) async {
-  final digits = (s.phone ?? '').replaceAll(RegExp(r'\D'), '');
-  if (digits.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Cadastre o telefone do aluno para cobrar pelo WhatsApp.'),
-    ));
-    return;
-  }
-  final phone = digits.length <= 11 ? '55$digits' : digits;
-  final firstName = s.name.trim().split(' ').first;
+  final name = firstName(s.name);
   final amount = s.monthlyFee == null
       ? ''
       : ' de ${_money.format(s.monthlyFee! * s.planMonths)}';
@@ -53,12 +45,9 @@ Future<void> chargeOnWhatsApp(BuildContext context, StudentEntity s,
       ? 'Consta em aberto a sua mensalidade$amount$due.'
       : 'Passando para lembrar da sua mensalidade$amount$due.';
   final sign = (trainerName == null || trainerName.isEmpty) ? '' : '\n$trainerName';
-  final text = 'Olá, $firstName! Tudo bem? $intro '
+  final text = 'Olá, $name! Tudo bem? $intro '
       'Qualquer dúvida é só me chamar. Obrigado!$sign';
-  await launchUrl(
-    Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(text)}'),
-    mode: LaunchMode.externalApplication,
-  );
+  await openWhatsApp(context, s.phone, text);
 }
 
 /// Abre o formulário de registro de pagamento. Retorna true se registrou.

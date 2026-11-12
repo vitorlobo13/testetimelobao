@@ -33,6 +33,7 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
   Gender _selectedGender = Gender.male;
   String _selectedPlan = 'Básico';
   bool _exempt = false;
+  DateTime? _birthDate;
   late DateTime _nextDue;
 
   @override
@@ -58,6 +59,7 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
         _selectedPlan = 'Básico';
       }
       _exempt = s.paymentStatus == PaymentStatus.exempt;
+      _birthDate = s.birthDate;
     }
   }
 
@@ -153,12 +155,7 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
               Row(
                 children: [
                   Expanded(
-                    child: CustomTextField(
-                      label: 'Idade',
-                      hint: 'Ex: 26',
-                      controller: _ageController,
-                      keyboardType: TextInputType.number,
-                    ),
+                    child: _buildBirthDateField(),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -304,6 +301,66 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
     );
   }
 
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? DateTime(now.year - 30, now.month, now.day),
+      firstDate: DateTime(1920),
+      lastDate: now,
+      initialEntryMode: DatePickerEntryMode.input,
+      locale: const Locale('pt', 'BR'),
+      helpText: 'Data de nascimento',
+    );
+    if (picked != null) setState(() => _birthDate = picked);
+  }
+
+  /// Nascimento (para idade e aniversário). Sem data, mostra a idade antiga.
+  Widget _buildBirthDateField() {
+    final age = widget.student?.age;
+    final text = _birthDate != null
+        ? DateFormat('dd/MM/yyyy').format(_birthDate!)
+        : (age != null ? '$age anos · informar data' : 'Informar');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Nascimento',
+          style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: _pickBirthDate,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.surfaceLight),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.cake_outlined, color: AppColors.textSecondary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    text,
+                    overflow: TextOverflow.ellipsis,
+                    style: _birthDate != null
+                        ? AppTextStyles.bodyLarge
+                        : AppTextStyles.bodyLarge.copyWith(color: AppColors.textTertiary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _pickDueDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -390,6 +447,7 @@ class _AddStudentPageState extends ConsumerState<AddStudentPage> {
       weight: weight,
       height: height,
       age: age,
+      birthDate: _birthDate,
       gender: _selectedGender,
       planType: _selectedPlan,
       monthlyFee: fee,

@@ -16,6 +16,7 @@ import 'add_student_page.dart';
 import 'create_workout_page.dart';
 import 'physical_assessment_page.dart';
 import 'financial_management_page.dart';
+import 'trainer_updates_page.dart';
 import '../../domain/entities/student_entity.dart';
 
 
@@ -170,7 +171,8 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
         },
       ),
       actions: [
-        // Notificações (Firestore)
+        // Atualizações (pendências por aluno) e notificações
+        const TrainerUpdatesButton(),
         const NotificationBell(),
         const SizedBox(width: 8),
       ],

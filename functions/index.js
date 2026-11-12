@@ -412,9 +412,26 @@ exports.onWorkoutWritten = onDocumentWritten(
 );
 
 // ---------------------------------------------------------------------------
-// Financeiro: lembrete diário para o personal (8h, horário de Brasília).
-// Junta, por personal, quem vence hoje e quem está em atraso. Só controle:
-// o app não cobra o aluno sozinho, a cobrança é sempre do personal.
+// Avaliações: mantém studentLinks/{id}.lastAssessmentAt com a data da
+// avaliação mais recente (inclusive as medidas lançadas pelo próprio aluno).
+// ---------------------------------------------------------------------------
+exports.onAssessmentWritten = onDocumentWritten(
+    "studentLinks/{linkId}/assessments/{assessmentId}",
+    async (event) => {
+      const {linkId} = event.params;
+      const latest = await db.collection(`studentLinks/${linkId}/assessments`)
+          .orderBy("recordedAt", "desc").limit(1).get();
+      const linkRef = db.doc(`studentLinks/${linkId}`);
+      const link = await linkRef.get();
+      if (!link.exists) return;
+      const at = latest.empty ? null : (latest.docs[0].get("recordedAt") || null);
+      await linkRef.update({lastAssessmentAt: at});
+    });
+
+// ---------------------------------------------------------------------------
+// Resumo diário do personal (8h, horário de Brasília): mensalidades que
+// vencem hoje ou estão atrasadas, treinos que vencem hoje ou já venceram e
+// aniversariantes do dia. Um único aviso por personal.
 // ---------------------------------------------------------------------------
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 
@@ -425,39 +442,55 @@ function spDay(date) {
   return new Intl.DateTimeFormat("en-CA", {timeZone: TZ}).format(date);
 }
 
-exports.dailyPaymentReminder = onSchedule(
+exports.dailyTrainerDigest = onSchedule(
     {schedule: "0 8 * * *", timeZone: TZ},
     async () => {
       const today = spDay(new Date());
-      // Margem de 1 dia cobre a diferença de fuso; o dia exato é conferido abaixo.
-      const limit = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const mmdd = today.slice(5);
       const snap = await db.collection("studentLinks")
-          .where("nextPaymentDate", "<=", limit)
+          .where("linkStatus", "in", ["pending", "active"])
           .get();
 
-      const perTrainer = new Map();
+      const per = new Map();
+      const bucket = (trainerId) => {
+        if (!per.has(trainerId)) {
+          per.set(trainerId, {payToday: 0, payLate: 0, workout: 0, birthdays: []});
+        }
+        return per.get(trainerId);
+      };
+
       for (const doc of snap.docs) {
         const d = doc.data();
         if (!d.trainerId || d.isActive === false) continue;
-        if (d.linkStatus === "archived" || d.paymentStatus === "exempt") continue;
-        const due = spDay(d.nextPaymentDate.toDate());
-        if (due > today) continue;
-        const t = perTrainer.get(d.trainerId) || {today: [], overdue: []};
-        (due === today ? t.today : t.overdue).push(d.name || "Aluno");
-        perTrainer.set(d.trainerId, t);
+        const name = (d.name || "Aluno").split(" ")[0];
+
+        if (d.paymentStatus !== "exempt" && d.nextPaymentDate) {
+          const due = spDay(d.nextPaymentDate.toDate());
+          if (due === today) bucket(d.trainerId).payToday++;
+          else if (due < today) bucket(d.trainerId).payLate++;
+        }
+        if (d.currentWorkoutId && d.currentWorkoutEndDate) {
+          if (spDay(d.currentWorkoutEndDate.toDate()) <= today) {
+            bucket(d.trainerId).workout++;
+          }
+        }
+        if (d.birthDate && spDay(d.birthDate.toDate()).slice(5) === mmdd) {
+          bucket(d.trainerId).birthdays.push(name);
+        }
       }
 
-      for (const [trainerId, t] of perTrainer) {
+      for (const [trainerId, t] of per) {
         const parts = [];
-        if (t.today.length) parts.push(`${t.today.length} vence(m) hoje`);
-        if (t.overdue.length) parts.push(`${t.overdue.length} em atraso`);
-        const names = [...t.today, ...t.overdue].slice(0, 4).join(", ");
-        const more = t.today.length + t.overdue.length > 4 ? "..." : "";
+        if (t.birthdays.length) parts.push(`🎂 aniversário: ${t.birthdays.join(", ")}`);
+        if (t.workout) parts.push(`${t.workout} treino(s) vencido(s)`);
+        if (t.payToday) parts.push(`${t.payToday} mensalidade(s) vencem hoje`);
+        if (t.payLate) parts.push(`${t.payLate} mensalidade(s) em atraso`);
+        if (!parts.length) continue;
         await notifyUser(trainerId, {
-          title: `Mensalidades: ${parts.join(" e ")}`,
-          body: `${names}${more}. Abra a Gestão Financeira para cobrar ou registrar.`,
-          type: "payments_due",
-          data: {screen: "finance"},
+          title: "Atualizações do dia",
+          body: parts.join(" · ") + ". Veja em Atualizações.",
+          type: "daily_digest",
+          data: {screen: "updates"},
         });
       }
     });

@@ -679,7 +679,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               session.divisionName ?? session.workoutName ?? 'Treino',
           date: session.startTime,
           duration: session.duration.inMinutes,
-          completed: session.completed,
+          // Concluído = finalizou com todos os exercícios feitos.
+          completed: session.completed && session.completionPercentage >= 100,
         ),
     ];
 

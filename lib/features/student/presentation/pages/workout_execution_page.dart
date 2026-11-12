@@ -149,7 +149,12 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
           style: AppTextStyles.headlineMedium,
         ),
         content: Text(
-          'Você completou o treino! Deseja finalizar?',
+          (ref.read(studentWorkoutProvider).activeSession?.completionPercentage ??
+                      0) >=
+                  100
+              ? 'Você completou o treino! Deseja finalizar?'
+              : 'Você fez ${(ref.read(studentWorkoutProvider).activeSession?.completionPercentage ?? 0).toStringAsFixed(0)}% dos exercícios. '
+                  'Finalizar mesmo assim? O treino fica registrado como incompleto.',
           style: AppTextStyles.bodyMedium,
         ),
         actions: [
@@ -360,8 +365,10 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
             ],
           ),
           child: CustomButton(
-            text: isCompleted ? 'FINALIZAR TREINO' : 'EM PROGRESSO',
-            onPressed: isCompleted ? _showFinishDialog : null,
+            // Pode finalizar a qualquer momento (ex.: pulou um aparelho
+            // ocupado); se faltar algo, o diálogo avisa quanto foi feito.
+            text: 'FINALIZAR TREINO',
+            onPressed: _showFinishDialog,
             type: ButtonType.primary,
             icon: isCompleted ? Icons.check : Icons.fitness_center,
           ),

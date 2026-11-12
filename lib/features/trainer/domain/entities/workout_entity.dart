@@ -1,6 +1,5 @@
 import 'exercise_entity.dart';
 
-
 /// Entidade de Treino Completo
 class WorkoutEntity {
   final String id;
@@ -13,6 +12,12 @@ class WorkoutEntity {
   final DateTime? updatedAt;
   final bool isActive;
 
+  /// Validade do treino (o personal é avisado quando estiver vencendo).
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final String? goal;
+  final String? level;
+
   const WorkoutEntity({
     required this.id,
     required this.trainerId,
@@ -23,10 +28,24 @@ class WorkoutEntity {
     required this.createdAt,
     this.updatedAt,
     this.isActive = true,
+    this.startDate,
+    this.endDate,
+    this.goal,
+    this.level,
   });
 
-  int get totalExercises => divisions.fold(0, (sum, div) => sum + div.exercises.length);
+  int get totalExercises =>
+      divisions.fold(0, (sum, div) => sum + div.exercises.length);
   int get totalDivisions => divisions.length;
+
+  /// Treino vencido (passou da data final).
+  bool get isExpired => endDate != null && endDate!.isBefore(DateTime.now());
+
+  /// Faltam 7 dias ou menos para vencer.
+  bool get isExpiringSoon =>
+      endDate != null &&
+      !isExpired &&
+      endDate!.difference(DateTime.now()).inDays <= 7;
 
   WorkoutEntity copyWith({
     String? id,
@@ -38,6 +57,10 @@ class WorkoutEntity {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? goal,
+    String? level,
   }) {
     return WorkoutEntity(
       id: id ?? this.id,
@@ -49,6 +72,10 @@ class WorkoutEntity {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      goal: goal ?? this.goal,
+      level: level ?? this.level,
     );
   }
 }
@@ -56,7 +83,7 @@ class WorkoutEntity {
 /// Divisão do Treino (A, B, C, D, etc.)
 class WorkoutDivision {
   final String id;
-  final String name; 
+  final String name;
   final String? description;
   final List<WorkoutExercise> exercises;
   final int order;
@@ -90,12 +117,16 @@ class WorkoutDivision {
 class WorkoutExercise {
   final String id;
   final ExerciseEntity exercise;
-  final int sets; 
-  final String reps; 
-  final String? rest; 
-  final String? load; 
-  final String? notes; 
+  final int sets;
+  final String reps;
+  final String? rest;
+  final String? load;
+  final String? notes;
   final int order;
+
+  /// Exercícios da mesma divisão com o mesmo `groupId` formam um
+  /// conjugado (bi-set / tri-set): feitos em sequência, sem descanso.
+  final String? groupId;
 
   const WorkoutExercise({
     required this.id,
@@ -106,7 +137,10 @@ class WorkoutExercise {
     this.load,
     this.notes,
     required this.order,
+    this.groupId,
   });
+
+  bool get isGrouped => groupId != null;
 
   WorkoutExercise copyWith({
     String? id,
@@ -117,6 +151,8 @@ class WorkoutExercise {
     String? load,
     String? notes,
     int? order,
+    String? groupId,
+    bool clearGroup = false,
   }) {
     return WorkoutExercise(
       id: id ?? this.id,
@@ -127,6 +163,7 @@ class WorkoutExercise {
       load: load ?? this.load,
       notes: notes ?? this.notes,
       order: order ?? this.order,
+      groupId: clearGroup ? null : (groupId ?? this.groupId),
     );
   }
 }

@@ -1,8 +1,15 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/models/workout_model.dart';
 import '../../domain/entities/workout_entity.dart';
 import '../../domain/entities/exercise_entity.dart';
 
 class WorkoutTemplate {
+  final String id;
   final String title;
   final String description;
   final String goal;
@@ -13,6 +20,7 @@ class WorkoutTemplate {
   final List<WorkoutDivision> workoutDivisions;
 
   const WorkoutTemplate({
+    this.id = '',
     required this.title,
     required this.description,
     required this.goal,
@@ -24,14 +32,93 @@ class WorkoutTemplate {
   });
 }
 
+/// Modelos de treino do personal logado: `trainers/{uid}/templates`.
+/// No primeiro acesso, recebe os modelos padrão abaixo (que ele pode apagar).
 class WorkoutLibraryNotifier extends Notifier<List<WorkoutTemplate>> {
-  @override
-  List<WorkoutTemplate> build() {
-    return _generateDefaultTemplates();
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
+
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+
+  String? get _trainerId {
+    final user = ref.read(authProvider).user;
+    return (user != null && user.isTrainer) ? user.id : null;
   }
 
-  void addTemplate(WorkoutTemplate template) {
-    state = [...state, template];
+  CollectionReference<Map<String, dynamic>> _templates(String trainerId) =>
+      _db.collection('trainers/$trainerId/templates');
+
+  @override
+  List<WorkoutTemplate> build() {
+    ref.onDispose(() => _subscription?.cancel());
+    ref.listen(authProvider.select((a) => a.user?.id), (_, __) => _listen());
+    Future.microtask(_listen);
+    return const [];
+  }
+
+  Future<void> _listen() async {
+    await _subscription?.cancel();
+    final trainerId = _trainerId;
+    if (trainerId == null) {
+      state = const [];
+      return;
+    }
+    await _seedIfNeeded(trainerId);
+    _subscription = _templates(trainerId).snapshots().listen((snap) {
+      state = snap.docs.map(_fromDoc).toList()
+        ..sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+    });
+  }
+
+  Future<void> _seedIfNeeded(String trainerId) async {
+    final meta = _db.doc('trainers/$trainerId/meta/templates');
+    final snap = await meta.get();
+    if (snap.exists && snap.data()?['seeded'] == true) return;
+    final batch = _db.batch();
+    for (final t in _generateDefaultTemplates()) {
+      batch.set(_templates(trainerId).doc(), _toMap(t));
+    }
+    batch.set(meta, {'seeded': true, 'seededAt': FieldValue.serverTimestamp()});
+    await batch.commit();
+  }
+
+  Future<void> addTemplate(WorkoutTemplate template) async {
+    final trainerId = _trainerId;
+    if (trainerId == null) return;
+    await _templates(trainerId).add(_toMap(template));
+  }
+
+  Future<void> deleteTemplate(String templateId) async {
+    final trainerId = _trainerId;
+    if (trainerId == null) return;
+    await _templates(trainerId).doc(templateId).delete();
+  }
+
+  static Map<String, dynamic> _toMap(WorkoutTemplate t) => {
+        'title': t.title,
+        'description': t.description,
+        'goal': t.goal,
+        'level': t.level,
+        'divisions': t.workoutDivisions.map(WorkoutModel.divisionToMap).toList(),
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+  static WorkoutTemplate _fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data() ?? const <String, dynamic>{};
+    final divisions = WorkoutModel.divisionsFromList(d['divisions']);
+    final exerciseNames = divisions
+        .expand((div) => div.exercises.map((e) => e.exercise.name))
+        .toList();
+    return WorkoutTemplate(
+      id: doc.id,
+      title: d['title'] as String? ?? '',
+      description: d['description'] as String? ?? '',
+      goal: d['goal'] as String? ?? '',
+      level: d['level'] as String? ?? '',
+      divisions: divisions.length,
+      exercises: exerciseNames.length,
+      exerciseList: exerciseNames,
+      workoutDivisions: divisions,
+    );
   }
 
   List<WorkoutTemplate> _generateDefaultTemplates() {

@@ -1,8 +1,14 @@
 import 'dart:developer' as developer;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/workout_entity.dart';
 import '../../domain/entities/exercise_entity.dart';
+import '../../data/repositories/workout_repository.dart';
+
+final workoutRepositoryProvider =
+    Provider<WorkoutRepository>((ref) => WorkoutRepository());
 
 /// Estado do construtor de treino (Imutável)
 class WorkoutBuilderState {
@@ -11,11 +17,19 @@ class WorkoutBuilderState {
   final List<WorkoutDivision> divisions;
   final int currentDivisionIndex;
 
+  /// Id do treino em edição (vazio = treino novo).
+  final String editingWorkoutId;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
   const WorkoutBuilderState({
     this.workoutName = '',
     this.workoutDescription,
     this.divisions = const [],
     this.currentDivisionIndex = 0,
+    this.editingWorkoutId = '',
+    this.startDate,
+    this.endDate,
   });
 
   WorkoutBuilderState copyWith({
@@ -23,12 +37,18 @@ class WorkoutBuilderState {
     String? workoutDescription,
     List<WorkoutDivision>? divisions,
     int? currentDivisionIndex,
+    String? editingWorkoutId,
+    DateTime? startDate,
+    DateTime? endDate,
   }) {
     return WorkoutBuilderState(
       workoutName: workoutName ?? this.workoutName,
       workoutDescription: workoutDescription ?? this.workoutDescription,
       divisions: divisions ?? this.divisions,
       currentDivisionIndex: currentDivisionIndex ?? this.currentDivisionIndex,
+      editingWorkoutId: editingWorkoutId ?? this.editingWorkoutId,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
     );
   }
 
@@ -207,17 +227,74 @@ class WorkoutBuilderNotifier extends Notifier<WorkoutBuilderState> {
     state = const WorkoutBuilderState();
   }
 
-  /// Salva o treino
+  /// Validade do treino.
+  void setValidity({DateTime? start, DateTime? end}) {
+    state = state.copyWith(startDate: start, endDate: end);
+  }
+
+  /// Junta o exercício [exerciseIndex] com o seguinte num conjugado
+  /// (bi-set/tri-set) ou desfaz a ligação se já estiverem juntos.
+  void toggleGroupWithNext(int exerciseIndex) {
+    final currentDiv = state.currentDivision;
+    if (currentDiv == null ||
+        exerciseIndex < 0 ||
+        exerciseIndex >= currentDiv.exercises.length - 1) {
+      return;
+    }
+    final list = List<WorkoutExercise>.from(currentDiv.exercises);
+    final a = list[exerciseIndex];
+    final b = list[exerciseIndex + 1];
+
+    if (a.groupId != null && a.groupId == b.groupId) {
+      // Desfaz: o próximo (e os seguintes do mesmo grupo) saem do conjugado.
+      final oldGroup = a.groupId;
+      for (var i = exerciseIndex + 1; i < list.length; i++) {
+        if (list[i].groupId != oldGroup) break;
+        list[i] = list[i].copyWith(clearGroup: true);
+      }
+      // Exercício que ficou sozinho no grupo deixa de ser conjugado.
+      final remaining = list.where((e) => e.groupId == oldGroup).length;
+      if (remaining < 2) {
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].groupId == oldGroup) {
+            list[i] = list[i].copyWith(clearGroup: true);
+          }
+        }
+      }
+    } else {
+      final group = a.groupId ?? b.groupId ?? _uuid.v4();
+      list[exerciseIndex] = a.copyWith(groupId: group);
+      list[exerciseIndex + 1] = b.copyWith(groupId: group);
+    }
+    _updateDivision(
+      state.currentDivisionIndex,
+      currentDiv.copyWith(exercises: list),
+    );
+  }
+
+  /// Carrega um treino já existente para editar (ou duplicar, com
+  /// [asCopy] = true, que gera um treino novo).
+  void loadFromWorkout(WorkoutEntity workout, {bool asCopy = false}) {
+    state = WorkoutBuilderState(
+      workoutName: workout.name,
+      workoutDescription: workout.description,
+      divisions: workout.divisions,
+      currentDivisionIndex: 0,
+      editingWorkoutId: asCopy ? '' : workout.id,
+      startDate: asCopy ? null : workout.startDate,
+      endDate: asCopy ? null : workout.endDate,
+    );
+  }
+
+  /// Salva o treino como o ativo do aluno no Firestore.
   Future<bool> saveWorkout(String studentId, String trainerId) async {
     if (state.workoutName.isEmpty || state.divisions.isEmpty) {
       return false;
     }
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
-
       final workout = WorkoutEntity(
-        id: _uuid.v4(),
+        id: state.editingWorkoutId,
         trainerId: trainerId,
         studentId: studentId,
         name: state.workoutName,
@@ -225,11 +302,16 @@ class WorkoutBuilderNotifier extends Notifier<WorkoutBuilderState> {
         divisions: state.divisions,
         createdAt: DateTime.now(),
         isActive: true,
+        startDate: state.startDate,
+        endDate: state.endDate,
       );
-
-      developer.log('Treino salvo: ${workout.name}');
+      final id = await ref
+          .read(workoutRepositoryProvider)
+          .saveActive(linkId: studentId, workout: workout);
+      developer.log('Treino salvo: ${workout.name} ($id)');
       return true;
-    } catch (e) {
+    } on FirebaseException catch (e) {
+      developer.log('Erro ao salvar treino', error: e);
       return false;
     }
   }

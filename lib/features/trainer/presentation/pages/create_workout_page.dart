@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../domain/entities/student_entity.dart';
@@ -19,9 +21,15 @@ import 'exercise_config_sheet.dart';
 class CreateWorkoutPage extends ConsumerStatefulWidget {
   final StudentEntity? student;
 
+  /// Treino a editar. Com [asCopy], vira um treino novo (duplicar).
+  final WorkoutEntity? initialWorkout;
+  final bool asCopy;
+
   const CreateWorkoutPage({
     super.key,
     this.student,
+    this.initialWorkout,
+    this.asCopy = false,
   });
 
   @override
@@ -42,8 +50,19 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
   void initState() {
     super.initState();
     // Reseta o construtor ao entrar
+    final initial = widget.initialWorkout;
+    if (initial != null) {
+      _workoutNameController.text =
+          widget.asCopy ? '${initial.name} (cópia)' : initial.name;
+      _workoutDescriptionController.text = initial.description ?? '';
+    }
     Future.microtask(() {
-      ref.read(workoutBuilderProvider.notifier).reset();
+      final builder = ref.read(workoutBuilderProvider.notifier);
+      if (initial != null) {
+        builder.loadFromWorkout(initial, asCopy: widget.asCopy);
+      } else {
+        builder.reset();
+      }
       ref.read(exercisesProvider.notifier).loadExercises();
     });
   }
@@ -388,7 +407,7 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
       // Criando treino para aluno específico
       success = await ref.read(workoutBuilderProvider.notifier).saveWorkout(
             widget.student!.id,
-            'trainer_123', // TODO: Pegar ID do trainer logado
+            ref.read(authProvider).user!.id,
           );
     }
 
@@ -617,6 +636,10 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
               maxLines: 2,
               prefixIcon: Icons.description,
             ),
+            if (widget.student != null) ...[
+              const SizedBox(height: 16),
+              _buildValidityRow(),
+            ],
             if (widget.student == null) ...[
               const SizedBox(height: 16),
               Row(
@@ -760,19 +783,96 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
       );
     }
 
+    final exercises = division.exercises;
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: division.exercises.length,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+      itemCount: exercises.length,
       itemBuilder: (context, index) {
-        final workoutExercise = division.exercises[index];
-        return WorkoutExerciseCard(
+        final workoutExercise = exercises[index];
+        final isLast = index == exercises.length - 1;
+        final linkedWithNext = !isLast &&
+            workoutExercise.groupId != null &&
+            workoutExercise.groupId == exercises[index + 1].groupId;
+
+        final card = WorkoutExerciseCard(
           workoutExercise: workoutExercise,
           onTap: () => _showExerciseConfig(index),
           onDelete: () {
             ref.read(workoutBuilderProvider.notifier).removeExercise(index);
           },
         );
+
+        return Column(
+          children: [
+            workoutExercise.isGrouped
+                ? Container(
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: AppColors.warning, width: 4),
+                      ),
+                    ),
+                    child: card,
+                  )
+                : card,
+            if (!isLast)
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor:
+                      linkedWithNext ? AppColors.warning : AppColors.textTertiary,
+                  visualDensity: VisualDensity.compact,
+                ),
+                icon: Icon(linkedWithNext ? Icons.link : Icons.link_off, size: 18),
+                label: Text(linkedWithNext
+                    ? 'Conjugado com o próximo (toque para separar)'
+                    : 'Conjugar com o próximo'),
+                onPressed: () => ref
+                    .read(workoutBuilderProvider.notifier)
+                    .toggleGroupWithNext(index),
+              ),
+          ],
+        );
       },
+    );
+  }
+
+  Widget _buildValidityRow() {
+    final builder = ref.watch(workoutBuilderProvider);
+    final format = DateFormat('dd/MM/yyyy');
+
+    Future<void> pick({required bool start}) async {
+      final now = DateTime.now();
+      final initial = start
+          ? (builder.startDate ?? now)
+          : (builder.endDate ??
+              (builder.startDate ?? now).add(const Duration(days: 45)));
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: initial,
+        firstDate: now.subtract(const Duration(days: 365)),
+        lastDate: now.add(const Duration(days: 730)),
+        locale: const Locale('pt', 'BR'),
+      );
+      if (picked == null) return;
+      ref.read(workoutBuilderProvider.notifier).setValidity(
+            start: start ? picked : null,
+            end: start ? null : picked,
+          );
+    }
+
+    Widget dateButton(String label, DateTime? value, bool start) => Expanded(
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.event, size: 18),
+            label: Text(value == null ? label : '$label: ${format.format(value)}'),
+            onPressed: () => pick(start: start),
+          ),
+        );
+
+    return Row(
+      children: [
+        dateButton('Início', builder.startDate, true),
+        const SizedBox(width: 12),
+        dateButton('Vence', builder.endDate, false),
+      ],
     );
   }
 

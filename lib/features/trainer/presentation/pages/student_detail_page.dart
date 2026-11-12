@@ -10,6 +10,7 @@ import '../../domain/entities/student_entity.dart';
 import '../widgets/info_row.dart';
 import '../widgets/section_card.dart';
 import '../widgets/workout_history_item.dart';
+import '../widgets/student_workouts_section.dart';
 import '../widgets/payment_history_item.dart';
 import 'create_workout_page.dart';
 import 'add_student_page.dart';
@@ -700,56 +701,9 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Treino Atual
-          SectionCard(
-            title: 'Treino Atual',
-            icon: Icons.fitness_center,
-            actionLabel: 'Editar',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => CreateWorkoutPage(
-                    student: _currentStudent,
-                  ),
-                ),
-              );
-            },
-            child: _currentStudent.currentWorkoutId != null
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Treino ABC - Hipertrofia',
-                        style: AppTextStyles.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Divisão: Push/Pull/Legs',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Criado em: 15/04/2024',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  )
-                : Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Nenhum treino prescrito',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
+          // Treino atual e anteriores (Firestore)
+          StudentWorkoutsSection(student: _currentStudent),
+          const SizedBox(height: 16),
 
           // Histórico de Treinos
           SectionCard(

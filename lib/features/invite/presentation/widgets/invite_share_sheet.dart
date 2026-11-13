@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/whatsapp.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../trainer/domain/entities/student_entity.dart';
 import '../../data/invite_repository.dart';
@@ -110,14 +110,7 @@ class _InviteShareSheetState extends State<_InviteShareSheet> {
       invite.expiresAt.toIso8601String(),
       DateTime.now().toIso8601String(),
     ]);
-    final digits = (widget.phone ?? '').replaceAll(RegExp(r'\D'), '');
-    // Telefone brasileiro sem DDI recebe o 55 na frente.
-    final phone =
-        digits.isEmpty ? '' : (digits.length <= 11 ? '55$digits' : digits);
-    final uri = Uri.parse(
-      'https://wa.me/$phone?text=${Uri.encodeComponent(_message(url))}',
-    );
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    await launchWhatsApp(widget.phone, _message(url));
   }
 
   Future<void> _copy(String url) async {

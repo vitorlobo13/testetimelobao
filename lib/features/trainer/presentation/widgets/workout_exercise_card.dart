@@ -143,7 +143,7 @@ class WorkoutExerciseCard extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.play_circle_outline,
                           size: 18,
                           color: AppColors.teal,

@@ -127,7 +127,7 @@ class _TemplateCard extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.6,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -184,7 +184,7 @@ class _TemplateCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.folder_open, color: AppColors.teal, size: 20),
+                            Icon(Icons.folder_open, color: AppColors.teal, size: 20),
                             const SizedBox(width: 8),
                             Text(
                               division.name,
@@ -236,7 +236,7 @@ class _TemplateCard extends StatelessWidget {
                                       color: AppColors.teal.withValues(alpha: 0.1),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.fitness_center,
                                       color: AppColors.teal,
                                       size: 20,
@@ -299,7 +299,7 @@ class _TemplateCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.surfaceLight),
+        side: BorderSide(color: AppColors.surfaceLight),
       ),
       color: AppColors.surface,
       elevation: 0,
@@ -321,7 +321,7 @@ class _TemplateCard extends StatelessWidget {
                     ),
                     child: Text(
                       template.goal.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.lightTeal,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,

@@ -105,7 +105,7 @@ class _AnamnesePageState extends ConsumerState<AnamnesePage> {
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: AppColors.teal,
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.teal,

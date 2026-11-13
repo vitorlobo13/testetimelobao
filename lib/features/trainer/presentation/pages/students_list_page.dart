@@ -169,7 +169,7 @@ class _StudentsListPageState extends ConsumerState<StudentsListPage> {
                   child: Container(
                     width: 10,
                     height: 10,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.teal,
                       shape: BoxShape.circle,
                     ),
@@ -193,7 +193,7 @@ class _StudentsListPageState extends ConsumerState<StudentsListPage> {
           // Lista de alunos
           Expanded(
             child: dashboardState.isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.teal),
                   )
                 : _filteredStudents.isEmpty
@@ -324,7 +324,7 @@ class _StudentsListPageState extends ConsumerState<StudentsListPage> {
         backgroundColor: AppColors.teal.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: AppColors.teal),
+          side: BorderSide(color: AppColors.teal),
         ),
       ),
     );

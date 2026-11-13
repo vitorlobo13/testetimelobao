@@ -75,7 +75,7 @@ class TrainerUpdatesPage extends ConsumerWidget {
         ),
       ),
       body: loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(color: AppColors.teal))
           : updates.isEmpty
               ? const _AllDone()

@@ -100,7 +100,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
         ),
       ),
       body: dashboard.isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(color: AppColors.teal))
           : ListView(
               padding: const EdgeInsets.all(16),

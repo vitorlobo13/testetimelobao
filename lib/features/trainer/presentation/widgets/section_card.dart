@@ -72,7 +72,7 @@ class SectionCard extends StatelessWidget {
             ),
           ),
 
-          const Divider(height: 1, color: AppColors.surfaceLight),
+          Divider(height: 1, color: AppColors.surfaceLight),
 
           // Conteúdo
           Padding(

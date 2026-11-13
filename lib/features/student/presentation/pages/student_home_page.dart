@@ -1,3 +1,4 @@
+import '../../../../core/theme/team_theme_provider.dart';
 import '../../../../shared/widgets/profile_avatar.dart';
 import '../widgets/student_drawer.dart';
 import 'package:flutter/material.dart';
@@ -160,6 +161,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
       ),
       actions: [
         // Histórico, perfil e sair ficaram no menu (☰).
+        const TeamThemeButton(),
         const NotificationBell(),
       ],
     );
@@ -309,7 +311,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
                   color: AppColors.teal.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.assignment,
                   color: AppColors.teal,
                   size: 28,
@@ -548,7 +550,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
   }
 
   Widget _buildLoading() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(32),
         child: CircularProgressIndicator(color: AppColors.teal),
@@ -564,7 +566,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surface,
                 shape: BoxShape.circle,
               ),

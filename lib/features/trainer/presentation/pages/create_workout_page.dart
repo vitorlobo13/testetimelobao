@@ -108,7 +108,7 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
                           color: AppColors.teal.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.fitness_center, color: AppColors.teal),
+                        child: Icon(Icons.fitness_center, color: AppColors.teal),
                       ),
                       title: Text(template.title, style: AppTextStyles.bodyLarge),
                       subtitle: Text(
@@ -459,12 +459,12 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
             IconButton(
               tooltip: 'Usar um modelo',
               onPressed: _showLoadTemplateSheet,
-              icon: const Icon(Icons.folder_open, color: AppColors.blueLight),
+              icon: Icon(Icons.folder_open, color: AppColors.blueLight),
             ),
           if (!_isSaving)
             TextButton.icon(
               onPressed: _handleSave,
-              icon: const Icon(Icons.check, color: AppColors.teal),
+              icon: Icon(Icons.check, color: AppColors.teal),
               label: Text(
                 'Salvar',
                 style: AppTextStyles.buttonMedium.copyWith(
@@ -473,7 +473,7 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
               ),
             ),
           if (_isSaving)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: SizedBox(
                 width: 24,
@@ -665,7 +665,7 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
     // botões). Pílulas de 44 px em uma linha que rola na horizontal.
     return Container(
       padding: const EdgeInsets.only(top: 12, bottom: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
         border: Border(
           bottom: BorderSide(color: AppColors.surfaceLight),
@@ -706,7 +706,7 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
                 // Adicionar divisão
                 Material(
                   color: Colors.transparent,
-                  shape: const StadiumBorder(
+                  shape: StadiumBorder(
                     side: BorderSide(color: AppColors.outline),
                   ),
                   child: InkWell(
@@ -719,7 +719,7 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.add,
+                          Icon(Icons.add,
                               color: AppColors.blueLight, size: 18),
                           const SizedBox(width: 6),
                           Text(

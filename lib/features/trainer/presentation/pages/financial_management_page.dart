@@ -88,7 +88,7 @@ class _FinancialManagementPageState
         ),
       ),
       body: dashboard.isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(color: AppColors.teal))
           : ListView(
               padding: const EdgeInsets.all(16),
@@ -176,7 +176,7 @@ class _FinancialManagementPageState
                       children: [
                         for (var i = 0; i < monthPayments.length; i++) ...[
                           if (i > 0)
-                            const Divider(
+                            Divider(
                                 color: AppColors.surfaceLight, height: 1),
                           PaymentTile(
                             payment: monthPayments[i],
@@ -359,7 +359,7 @@ class _ChargeCard extends ConsumerWidget {
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: AppColors.surfaceLight),
+                    side: BorderSide(color: AppColors.surfaceLight),
                   ),
                   onPressed: () => chargeOnWhatsApp(context, s,
                       trainerName: ref.read(authProvider).user?.name),

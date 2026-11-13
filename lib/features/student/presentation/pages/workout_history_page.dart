@@ -244,7 +244,7 @@ class _HistoryCardState extends State<_HistoryCard> {
             },
           ),
           if (_isExpanded) ...[
-            const Divider(color: AppColors.surfaceLight, height: 1),
+            Divider(color: AppColors.surfaceLight, height: 1),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -269,7 +269,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.arrow_right,
                             color: AppColors.lightTeal,
                             size: 16,

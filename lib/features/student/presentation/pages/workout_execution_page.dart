@@ -256,7 +256,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
     final session = workoutState.activeSession;
 
     if (session == null) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
           child: CircularProgressIndicator(color: AppColors.teal),
         ),
@@ -285,7 +285,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
             child: LinearProgressIndicator(
               value: completionPercentage / 100,
               backgroundColor: AppColors.surfaceLight,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.teal),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.teal),
             ),
           ),
         ),

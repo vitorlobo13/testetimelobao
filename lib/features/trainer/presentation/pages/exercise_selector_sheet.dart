@@ -74,7 +74,7 @@ class _ExerciseSelectorSheetState extends ConsumerState<ExerciseSelectorSheet> {
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -157,7 +157,7 @@ class _ExerciseSelectorSheetState extends ConsumerState<ExerciseSelectorSheet> {
           // Lista de exercícios
           Expanded(
             child: exercisesState.isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.teal),
                   )
                 : _filteredExercises.isEmpty

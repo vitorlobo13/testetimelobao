@@ -49,7 +49,7 @@ class BrandWordmark extends StatelessWidget {
             height: 3,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                   colors: [AppColors.blue, AppColors.pink]),
             ),
           ),

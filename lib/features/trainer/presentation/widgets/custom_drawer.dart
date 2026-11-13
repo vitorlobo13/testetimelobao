@@ -151,7 +151,7 @@ class CustomDrawer extends ConsumerWidget {
                     },
                   ),
 
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Divider(color: AppColors.surfaceLight),
                   ),
@@ -199,7 +199,7 @@ class CustomDrawer extends ConsumerWidget {
                     },
                   ),
 
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Divider(color: AppColors.surfaceLight),
                   ),
@@ -251,7 +251,7 @@ class CustomDrawer extends ConsumerWidget {
       decoration: BoxDecoration(
         // Superfície lisa com o traço azul → rosa da marca embaixo.
         color: AppColors.surface,
-        border: const Border(
+        border: Border(
           bottom: BorderSide(color: AppColors.pink, width: 2),
         ),
       ),
@@ -348,7 +348,7 @@ class CustomDrawer extends ConsumerWidget {
   Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: AppColors.surfaceLight, width: 1),
         ),

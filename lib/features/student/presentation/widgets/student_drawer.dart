@@ -37,7 +37,7 @@ class StudentDrawer extends ConsumerWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surface,
                 border: Border(
                   bottom: BorderSide(color: AppColors.pink, width: 2),
@@ -85,7 +85,7 @@ class StudentDrawer extends ConsumerWidget {
             ),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(color: AppColors.surfaceLight, width: 1),
                 ),

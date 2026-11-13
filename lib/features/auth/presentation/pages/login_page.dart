@@ -309,7 +309,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildDivider() {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppColors.surfaceLight)),
+        Expanded(child: Divider(color: AppColors.surfaceLight)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -319,7 +319,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppColors.surfaceLight)),
+        Expanded(child: Divider(color: AppColors.surfaceLight)),
       ],
     );
   }

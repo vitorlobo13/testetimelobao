@@ -59,7 +59,7 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.teal,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -149,7 +149,7 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
         ),
       ),
       body: dashboardState.isLoading || sessionsAsync.isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+          ? Center(child: CircularProgressIndicator(color: AppColors.teal))
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -191,7 +191,7 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.date_range, color: AppColors.teal, size: 20),
+                        Icon(Icons.date_range, color: AppColors.teal, size: 20),
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +264,7 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
                               color: AppColors.surface,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                side: const BorderSide(color: AppColors.surfaceLight),
+                                side: BorderSide(color: AppColors.surfaceLight),
                               ),
                               elevation: 0,
                               child: Padding(
@@ -283,7 +283,7 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
                                           backgroundColor: AppColors.teal.withValues(alpha: 0.1),
                                           child: Text(
                                             student.name[0].toUpperCase(),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: AppColors.lightTeal,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -343,7 +343,7 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
                                         value: progressPercent,
                                         minHeight: 6,
                                         backgroundColor: AppColors.surfaceLight,
-                                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.teal),
+                                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.teal),
                                       ),
                                     ),
                                   ],

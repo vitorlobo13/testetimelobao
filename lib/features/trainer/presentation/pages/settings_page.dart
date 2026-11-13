@@ -307,11 +307,11 @@ InputDecoration _decoration(String label, IconData icon) => InputDecoration(
       fillColor: AppColors.background,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.surfaceLight),
+        borderSide: BorderSide(color: AppColors.surfaceLight),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.surfaceLight),
+        borderSide: BorderSide(color: AppColors.surfaceLight),
       ),
     );
 

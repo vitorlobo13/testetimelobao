@@ -276,7 +276,7 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -520,7 +520,7 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
           if (!_isSaving)
             TextButton.icon(
               onPressed: _handleSave,
-              icon: const Icon(Icons.check, color: AppColors.teal),
+              icon: Icon(Icons.check, color: AppColors.teal),
               label: Text(
                 'Salvar',
                 style: AppTextStyles.buttonMedium.copyWith(
@@ -529,7 +529,7 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
               ),
             ),
           if (_isSaving)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: SizedBox(
                 width: 24,
@@ -596,7 +596,7 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
                   // Botão: importar da biblioteca
                   TextButton.icon(
                     onPressed: _showImportFromLibrarySheet,
-                    icon: const Icon(Icons.library_books, color: AppColors.lightTeal, size: 18),
+                    icon: Icon(Icons.library_books, color: AppColors.lightTeal, size: 18),
                     label: Text(
                       'Biblioteca',
                       style: AppTextStyles.buttonMedium.copyWith(
@@ -606,7 +606,7 @@ class _CreateDietPageState extends ConsumerState<CreateDietPage> {
                   ),
                   TextButton.icon(
                     onPressed: _showAddMealDialog,
-                    icon: const Icon(Icons.add, color: AppColors.teal),
+                    icon: Icon(Icons.add, color: AppColors.teal),
                     label: Text(
                       'Adicionar',
                       style: AppTextStyles.buttonMedium.copyWith(
@@ -836,7 +836,7 @@ class _ImportLibrarySheetState extends ConsumerState<_ImportLibrarySheet> {
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.82,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -858,7 +858,7 @@ class _ImportLibrarySheetState extends ConsumerState<_ImportLibrarySheet> {
             padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
             child: Row(
               children: [
-                const Icon(Icons.library_books, color: AppColors.lightTeal),
+                Icon(Icons.library_books, color: AppColors.lightTeal),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -921,7 +921,7 @@ class _ImportLibrarySheetState extends ConsumerState<_ImportLibrarySheet> {
           // Lista de templates
           Expanded(
             child: libraryState.isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.teal),
                   )
                 : filtered.isEmpty

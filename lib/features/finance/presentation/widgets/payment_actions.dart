@@ -319,11 +319,11 @@ class _RegisterPaymentSheetState extends ConsumerState<_RegisterPaymentSheet> {
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.surfaceLight),
+          borderSide: BorderSide(color: AppColors.surfaceLight),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.surfaceLight),
+          borderSide: BorderSide(color: AppColors.surfaceLight),
         ),
       );
 }
@@ -356,7 +356,7 @@ class PaymentTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      leading: const CircleAvatar(
+      leading: CircleAvatar(
         backgroundColor: AppColors.surfaceLight,
         child: Icon(Icons.arrow_downward, color: AppColors.success, size: 20),
       ),

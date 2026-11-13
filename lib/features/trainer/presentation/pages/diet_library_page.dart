@@ -66,7 +66,7 @@ class _DietLibraryPageState extends ConsumerState<DietLibraryPage> {
         ),
       ),
       body: libraryState.isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
+          ? Center(child: CircularProgressIndicator(color: AppColors.teal))
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -338,7 +338,7 @@ class _TemplateCard extends StatelessWidget {
                       value: 'edit',
                       child: Row(
                         children: [
-                          const Icon(Icons.edit, size: 18, color: AppColors.teal),
+                          Icon(Icons.edit, size: 18, color: AppColors.teal),
                           const SizedBox(width: 12),
                           Text('Editar', style: AppTextStyles.bodyMedium),
                         ],
@@ -429,7 +429,7 @@ class _TemplateCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.edit, size: 13, color: AppColors.lightTeal),
+                        Icon(Icons.edit, size: 13, color: AppColors.lightTeal),
                         const SizedBox(width: 4),
                         Text(
                           'Editar',
@@ -510,7 +510,7 @@ class _TemplateViewerSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.88,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -622,7 +622,7 @@ class _MealViewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.access_time, size: 15, color: AppColors.lightTeal),
+              Icon(Icons.access_time, size: 15, color: AppColors.lightTeal),
               const SizedBox(width: 6),
               Text(
                 '${meal.name}  •  ${meal.time}',
@@ -881,7 +881,7 @@ class _TemplateEditorPageState extends ConsumerState<_TemplateEditorPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.72,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -1073,7 +1073,7 @@ class _TemplateEditorPageState extends ConsumerState<_TemplateEditorPage> {
         ),
         actions: [
           if (_isSaving)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: SizedBox(
                 width: 20,
@@ -1087,7 +1087,7 @@ class _TemplateEditorPageState extends ConsumerState<_TemplateEditorPage> {
           else
             TextButton.icon(
               onPressed: _handleSave,
-              icon: const Icon(Icons.check, color: AppColors.teal),
+              icon: Icon(Icons.check, color: AppColors.teal),
               label: Text(
                 'Salvar',
                 style: AppTextStyles.buttonMedium.copyWith(color: AppColors.teal),
@@ -1235,7 +1235,7 @@ class _TemplateEditorPageState extends ConsumerState<_TemplateEditorPage> {
               Text('Refeições', style: AppTextStyles.headlineMedium),
               TextButton.icon(
                 onPressed: _showAddMealDialog,
-                icon: const Icon(Icons.add, color: AppColors.teal),
+                icon: Icon(Icons.add, color: AppColors.teal),
                 label: Text(
                   'Adicionar',
                   style: AppTextStyles.buttonMedium.copyWith(color: AppColors.teal),

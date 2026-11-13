@@ -56,7 +56,7 @@ class MarketingPage extends StatelessWidget {
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          bottom: const TabBar(
+          bottom: TabBar(
             indicatorColor: AppColors.teal,
             labelColor: AppColors.textPrimary,
             unselectedLabelColor: AppColors.textTertiary,
@@ -309,7 +309,7 @@ class _TemplatesTab extends ConsumerWidget {
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.surfaceLight)),
+              side: BorderSide(color: AppColors.surfaceLight)),
           onPressed: () => _edit(context, ref, list, null),
           icon: const Icon(Icons.add),
           label: const Text('Novo modelo'),

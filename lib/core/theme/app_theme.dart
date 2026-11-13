@@ -20,7 +20,7 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       canvasColor: AppColors.background,
 
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: AppColors.blue,
         secondary: AppColors.pink,
         tertiary: AppColors.blueLight,
@@ -79,7 +79,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(color: AppColors.outline, width: 1),
+          side: BorderSide(color: AppColors.outline, width: 1),
           minimumSize: const Size(0, 44),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: controlShape,
@@ -99,7 +99,7 @@ class AppTheme {
         backgroundColor: AppColors.surface,
         selectedColor: AppColors.blue,
         disabledColor: AppColors.surface,
-        side: const BorderSide(color: AppColors.outline),
+        side: BorderSide(color: AppColors.outline),
         shape: const StadiumBorder(),
         labelStyle: AppTextStyles.bodyMedium.copyWith(
           color: AppColors.textPrimary,
@@ -116,15 +116,15 @@ class AppTheme {
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusControl),
-          borderSide: const BorderSide(color: AppColors.outline),
+          borderSide: BorderSide(color: AppColors.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusControl),
-          borderSide: const BorderSide(color: AppColors.outline),
+          borderSide: BorderSide(color: AppColors.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusControl),
-          borderSide: const BorderSide(color: AppColors.blue, width: 1.5),
+          borderSide: BorderSide(color: AppColors.blue, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusControl),
@@ -157,7 +157,7 @@ class AppTheme {
         contentTextStyle: AppTextStyles.bodyMedium,
       ),
 
-      bottomSheetTheme: const BottomSheetThemeData(
+      bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
@@ -199,12 +199,12 @@ class AppTheme {
             s.contains(WidgetState.selected) ? AppColors.blue : null),
       ),
 
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
+      progressIndicatorTheme: ProgressIndicatorThemeData(
         color: AppColors.blue,
         linearTrackColor: AppColors.surfaceLight,
       ),
 
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.blue,
         unselectedItemColor: AppColors.textTertiary,
@@ -212,7 +212,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
       ),
 
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: AppColors.surfaceLight,
         thickness: 1,
         space: 1,

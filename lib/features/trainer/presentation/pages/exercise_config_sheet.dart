@@ -192,7 +192,7 @@ class _ExerciseConfigSheetState extends ConsumerState<ExerciseConfigSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(children: [
-            const Icon(Icons.ondemand_video, color: AppColors.lightTeal, size: 20),
+            Icon(Icons.ondemand_video, color: AppColors.lightTeal, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text('Vídeo de demonstração',
@@ -271,7 +271,7 @@ class _ExerciseConfigSheetState extends ConsumerState<ExerciseConfigSheet> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

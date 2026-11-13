@@ -107,7 +107,7 @@ class ExerciseExecutionCard extends StatelessWidget {
 
           // Detalhes expandidos
           if (isExpanded) ...[
-            const Divider(height: 1, color: AppColors.surfaceLight),
+            Divider(height: 1, color: AppColors.surfaceLight),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -158,7 +158,7 @@ class ExerciseExecutionCard extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.info_outline,
                             size: 18,
                             color: AppColors.teal,
@@ -192,7 +192,7 @@ class ExerciseExecutionCard extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.play_circle_fill,
                               size: 24,
                               color: AppColors.teal,

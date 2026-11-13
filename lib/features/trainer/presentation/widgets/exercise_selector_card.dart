@@ -77,7 +77,7 @@ class ExerciseSelectorCard extends StatelessWidget {
 
             // Indicador de seleção
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_circle,
                 color: AppColors.teal,
                 size: 28,

@@ -1,28 +1,111 @@
 import 'package:flutter/material.dart';
 
-/// Paleta do Time Lobo Lopes (tirada da identidade do Instagram):
-/// noite azul-marinho, azul elétrico do Time Lobão e rosa do Time Thaísa Lopes.
+/// Visual do app: Time Lobo (azul, do Matheus) ou Time Lopes (rosa, da
+/// Thaísa). Cada aparelho guarda a escolha (ver team_theme_provider.dart).
+enum TeamTheme {
+  lobo('Time Lobo'),
+  lopes('Time Lopes');
+
+  const TeamTheme(this.label);
+  final String label;
+
+  TeamTheme get other => this == lobo ? lopes : lobo;
+}
+
+/// Cores que mudam de um visual para o outro.
+class AppPalette {
+  const AppPalette({
+    required this.primary,
+    required this.primaryLight,
+    required this.primaryDeep,
+    required this.accent,
+    required this.accentLight,
+    required this.background,
+    required this.surface,
+    required this.surfaceLight,
+    required this.outline,
+  });
+
+  final Color primary;
+  final Color primaryLight;
+  final Color primaryDeep;
+  final Color accent;
+  final Color accentLight;
+  final Color background;
+  final Color surface;
+  final Color surfaceLight;
+  final Color outline;
+
+  /// Azul elétrico do Matheus, com o rosa como destaque.
+  static const lobo = AppPalette(
+    primary: Color(0xFF2F7BFF),
+    primaryLight: Color(0xFF6FA3FF),
+    primaryDeep: Color(0xFF1B4FB8),
+    accent: Color(0xFFE5337E),
+    accentLight: Color(0xFFF27AAA),
+    background: Color(0xFF0B1428),
+    surface: Color(0xFF141F38),
+    surfaceLight: Color(0xFF1E2B4A),
+    outline: Color(0xFF2A3A5E),
+  );
+
+  /// Rosa da Thaísa sobre uma noite em tom de vinho.
+  static const lopes = AppPalette(
+    primary: Color(0xFFE5337E),
+    primaryLight: Color(0xFFF27AAA),
+    primaryDeep: Color(0xFFB01F5C),
+    accent: Color(0xFFFF9EC7),
+    accentLight: Color(0xFFFFC7DE),
+    background: Color(0xFF1A0B16),
+    surface: Color(0xFF2A1424),
+    surfaceLight: Color(0xFF3A1D32),
+    outline: Color(0xFF4E2944),
+  );
+
+  static AppPalette of(TeamTheme team) => team == TeamTheme.lopes ? lopes : lobo;
+}
+
+/// Paleta do Time Lobo Lopes.
 ///
-/// Os nomes antigos (`teal`, `lightTeal`, `darkTeal`) continuam existindo
-/// para não quebrar as telas: agora apontam para os tons de azul da marca.
+/// As cores da marca e os fundos vêm do visual escolhido ([use]); por isso
+/// são `get` e não `const`. Os nomes antigos (`blue`, `pink`, `teal`...)
+/// continuam valendo: `blue`/`teal` é a cor principal do visual atual e
+/// `pink` é a cor de destaque.
 class AppColors {
-  // Marca
-  static const Color blue = Color(0xFF2F7BFF); // Azul Lobão (ação principal)
-  static const Color blueLight = Color(0xFF6FA3FF); // Azul claro (texto/realce)
-  static const Color blueDeep = Color(0xFF1B4FB8); // Azul profundo
-  static const Color pink = Color(0xFFE5337E); // Rosa Lopes (destaques)
-  static const Color pinkLight = Color(0xFFF27AAA);
+  static TeamTheme _team = TeamTheme.lobo;
+  static AppPalette _p = AppPalette.lobo;
+
+  static TeamTheme get team => _team;
+
+  /// Troca o visual. Quem chama precisa reconstruir o app (o MaterialApp
+  /// usa o visual como key).
+  static void use(TeamTheme team) {
+    _team = team;
+    _p = AppPalette.of(team);
+  }
+
+  // Marca (dinâmicas)
+  static Color get blue => _p.primary; // cor principal (ação)
+  static Color get blueLight => _p.primaryLight; // texto/realce
+  static Color get blueDeep => _p.primaryDeep;
+  static Color get pink => _p.accent; // destaque
+  static Color get pinkLight => _p.accentLight;
 
   // Compatibilidade com o código existente
-  static const Color teal = blue;
-  static const Color lightTeal = blueLight;
-  static const Color darkTeal = blueDeep;
+  static Color get teal => _p.primary;
+  static Color get lightTeal => _p.primaryLight;
+  static Color get darkTeal => _p.primaryDeep;
+  static Color get info => _p.primaryLight;
 
-  // Fundos
-  static const Color background = Color(0xFF0B1428); // Noite
-  static const Color surface = Color(0xFF141F38); // Superfície
-  static const Color surfaceLight = Color(0xFF1E2B4A); // Superfície elevada / bordas
-  static const Color outline = Color(0xFF2A3A5E); // Bordas e divisórias
+  // Fundos (dinâmicos)
+  static Color get background => _p.background;
+  static Color get surface => _p.surface;
+  static Color get surfaceLight => _p.surfaceLight;
+  static Color get outline => _p.outline;
+
+  // Cores fixas da marca, para mostrar os dois times lado a lado.
+  static const Color loboBlue = Color(0xFF2F7BFF);
+  static const Color lopesPink = Color(0xFFE5337E);
 
   // Textos
   static const Color textPrimary = Color(0xFFEEF2FA); // Gelo
@@ -33,15 +116,13 @@ class AppColors {
   static const Color success = Color(0xFF22C55E);
   static const Color error = Color(0xFFF04452);
   static const Color warning = Color(0xFFF5A524);
-  static const Color info = blueLight;
 
-  // "Gradientes": mantidos por compatibilidade, agora quase lisos (sem o
-  // visual chamativo de antes).
-  static const LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFF1B4FB8), Color(0xFF2F7BFF)],
-  );
+  // "Gradientes": mantidos por compatibilidade, quase lisos.
+  static LinearGradient get primaryGradient => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [_p.primaryDeep, _p.primary],
+      );
 
   static const LinearGradient dangerGradient = LinearGradient(
     begin: Alignment.topLeft,

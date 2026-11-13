@@ -95,7 +95,7 @@ class MealCard extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Divisor
-            const Divider(height: 1, color: AppColors.surfaceLight),
+            Divider(height: 1, color: AppColors.surfaceLight),
 
             const SizedBox(height: 16),
 
@@ -129,7 +129,7 @@ class MealCard extends StatelessWidget {
             // Lista de alimentos
             if (meal.foods.isNotEmpty) ...[
               const SizedBox(height: 16),
-              const Divider(height: 1, color: AppColors.surfaceLight),
+              Divider(height: 1, color: AppColors.surfaceLight),
               const SizedBox(height: 12),
               Text(
                 '${meal.foods.length} alimento(s)',
@@ -150,7 +150,7 @@ class MealCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
                       size: 16,
                       color: AppColors.teal,

@@ -190,7 +190,7 @@ class _FeedbackFormState extends ConsumerState<_FeedbackForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const Icon(Icons.support_agent, color: AppColors.lightTeal),
+            Icon(Icons.support_agent, color: AppColors.lightTeal),
             const SizedBox(width: 8),
             Text('Fale com a gente', style: AppTextStyles.headlineSmall),
           ]),

@@ -1,3 +1,4 @@
+import '../../../../core/theme/team_theme_provider.dart';
 import '../../../invite/presentation/widgets/invite_share_sheet.dart';
 import '../../../../shared/widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                     leading: CircleAvatar(
                       backgroundColor: AppColors.teal.withValues(alpha: 0.1),
                       child: Text(student.name[0].toUpperCase(),
-                          style: const TextStyle(color: AppColors.lightTeal)),
+                          style: TextStyle(color: AppColors.lightTeal)),
                     ),
                     title: Text(student.name, style: AppTextStyles.bodyLarge),
                     subtitle:
@@ -186,6 +187,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
       ),
       actions: const [
         // Atualizações (pendências por aluno) e notificações
+        TeamThemeButton(),
         TrainerUpdatesButton(),
         NotificationBell(),
         SizedBox(width: 8),
@@ -439,7 +441,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
   }
 
   Widget _buildLoading() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(32),
         child: CircularProgressIndicator(

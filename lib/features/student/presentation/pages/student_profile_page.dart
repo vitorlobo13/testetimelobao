@@ -292,7 +292,7 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.monitor_weight, color: AppColors.lightTeal),
+              Icon(Icons.monitor_weight, color: AppColors.lightTeal),
               const SizedBox(width: 8),
               Text(
                 'DADOS FÍSICOS',
@@ -423,7 +423,7 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.straighten, color: AppColors.lightTeal),
+              Icon(Icons.straighten, color: AppColors.lightTeal),
               const SizedBox(width: 8),
               Text(
                 'PERÍMETROS E COMPOSIÇÃO',
@@ -505,7 +505,7 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.phone, color: AppColors.lightTeal),
+              Icon(Icons.phone, color: AppColors.lightTeal),
               const SizedBox(width: 8),
               Text(
                 'CONTATO',
@@ -556,7 +556,7 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.card_membership, color: AppColors.lightTeal),
+              Icon(Icons.card_membership, color: AppColors.lightTeal),
               const SizedBox(width: 8),
               Text(
                 'PLANO & PERSONAL',

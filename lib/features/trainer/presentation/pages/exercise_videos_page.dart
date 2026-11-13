@@ -106,7 +106,7 @@ class _ExerciseVideosPageState extends ConsumerState<ExerciseVideosPage> {
           ),
           Expanded(
             child: exercisesState.isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.teal))
                 : exercisesState.errorMessage != null
                     ? Center(

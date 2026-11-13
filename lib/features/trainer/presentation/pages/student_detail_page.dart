@@ -190,7 +190,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
             _currentStudent.linkStatus != LinkStatus.archived)
           IconButton(
             tooltip: 'Enviar convite',
-            icon: const Icon(Icons.send_to_mobile, color: AppColors.lightTeal),
+            icon: Icon(Icons.send_to_mobile, color: AppColors.lightTeal),
             onPressed: () => showInviteShareSheet(context, _currentStudent),
           ),
         IconButton(
@@ -551,7 +551,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                     value: _currentStudent.phone!,
                     icon: Icons.phone_outlined,
                     trailing: IconButton(
-                      icon: const Icon(Icons.phone, color: AppColors.teal),
+                      icon: Icon(Icons.phone, color: AppColors.teal),
                       onPressed: () {
                         // TODO: Ligar para o aluno
                       },
@@ -783,7 +783,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
                         child: OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.textPrimary,
-                            side: const BorderSide(color: AppColors.surfaceLight),
+                            side: BorderSide(color: AppColors.surfaceLight),
                           ),
                           onPressed: () => chargeOnWhatsApp(context, s,
                               trainerName: ref.read(authProvider).user?.name),
@@ -815,7 +815,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
             title: 'Histórico de Pagamentos',
             icon: Icons.receipt_long,
             child: paymentsAsync.when(
-              loading: () => const Padding(
+              loading: () => Padding(
                 padding: EdgeInsets.all(16),
                 child: Center(
                     child: CircularProgressIndicator(color: AppColors.teal)),
@@ -979,7 +979,7 @@ Widget _buildBottomBar() {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),

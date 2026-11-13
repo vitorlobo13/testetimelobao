@@ -39,7 +39,7 @@ class _DietViewPageState extends ConsumerState<DietViewPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -123,7 +123,7 @@ class _DietViewPageState extends ConsumerState<DietViewPage> {
         title: Text('Minha Dieta', style: AppTextStyles.headlineMedium),
       ),
       body: dietState.isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(color: AppColors.teal),
             )
           : diet == null
@@ -247,7 +247,7 @@ class _DietViewPageState extends ConsumerState<DietViewPage> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surface,
                 shape: BoxShape.circle,
               ),

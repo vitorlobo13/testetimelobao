@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/team_theme_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -23,6 +24,9 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  // Visual escolhido neste aparelho (Time Lobo ou Time Lopes).
+  await loadSavedTeamTheme();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -41,7 +45,10 @@ class TimeLobaoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Trocar o visual redesenha o app inteiro com as novas cores.
+    final team = ref.watch(teamThemeProvider);
     return MaterialApp.router(
+      key: ValueKey(team),
       title: 'Time Lobo Lopes',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,

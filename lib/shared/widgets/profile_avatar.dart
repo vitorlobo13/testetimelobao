@@ -203,7 +203,7 @@ class _ProfileAvatarState extends ConsumerState<ProfileAvatar> {
               bottom: -2,
               child: Container(
                 padding: const EdgeInsets.all(5),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.teal,
                   shape: BoxShape.circle,
                 ),

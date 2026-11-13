@@ -119,7 +119,7 @@ class NotificationsPage extends ConsumerWidget {
             : ListView.separated(
                 itemCount: list.length,
                 separatorBuilder: (_, __) =>
-                    const Divider(height: 1, color: AppColors.surfaceLight),
+                    Divider(height: 1, color: AppColors.surfaceLight),
                 itemBuilder: (context, i) {
                   final n = list[i];
                   return Dismissible(
@@ -225,7 +225,7 @@ class _PushPromptCardState extends ConsumerState<PushPromptCard> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.notifications_active, color: AppColors.lightTeal),
+          Icon(Icons.notifications_active, color: AppColors.lightTeal),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

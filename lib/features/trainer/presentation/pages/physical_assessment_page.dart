@@ -505,14 +505,16 @@ class _PhysicalAssessmentPageState
                     context: context,
                     builder: (_) => Dialog(
                       child: InteractiveViewer(
-                        child: Image.network(m.photoUrls[i]),
+                        child: Image.network(m.photoUrls[i],
+                            webHtmlElementStrategy: WebHtmlElementStrategy.fallback),
                       ),
                     ),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(m.photoUrls[i],
-                        width: 72, height: 96, fit: BoxFit.cover),
+                        width: 72, height: 96, fit: BoxFit.cover,
+                        webHtmlElementStrategy: WebHtmlElementStrategy.fallback),
                   ),
                 ),
               ),

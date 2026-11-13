@@ -289,6 +289,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage>
               child: Image.network(
                 _currentStudent.photoUrl!,
                 fit: BoxFit.cover,
+                // Fotos do Firebase Storage: cai para <img> se o CORS bloquear.
+                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
                 errorBuilder: (context, error, stackTrace) => _buildInitials(),
               ),
             )

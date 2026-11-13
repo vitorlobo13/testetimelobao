@@ -142,7 +142,10 @@ class _ProfileAvatarState extends ConsumerState<ProfileAvatar> {
             ? null
             : Border.all(color: widget.borderColor!, width: 3),
         image: hasPhoto
-            ? DecorationImage(image: NetworkImage(photo), fit: BoxFit.cover)
+            ? DecorationImage(image: NetworkImage(photo,
+                    // Fotos do Firebase Storage: cai para <img> se o CORS bloquear.
+                    webHtmlElementStrategy: WebHtmlElementStrategy.fallback),
+                fit: BoxFit.cover)
             : null,
       ),
       alignment: Alignment.center,

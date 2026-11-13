@@ -120,6 +120,8 @@ class StudentCard extends StatelessWidget {
               child: Image.network(
                 student.photoUrl!,
                 fit: BoxFit.cover,
+                // Fotos do Firebase Storage: cai para <img> se o CORS bloquear.
+                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
                 errorBuilder: (context, error, stackTrace) => _buildInitials(),
               ),
             )

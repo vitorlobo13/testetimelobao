@@ -92,7 +92,8 @@ class StudentEvolutionSection extends ConsumerWidget {
                           itemBuilder: (context, i) => ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(m.photoUrls[i],
-                                width: 60, height: 80, fit: BoxFit.cover),
+                                width: 60, height: 80, fit: BoxFit.cover,
+                                webHtmlElementStrategy: WebHtmlElementStrategy.fallback),
                           ),
                         ),
                       ),

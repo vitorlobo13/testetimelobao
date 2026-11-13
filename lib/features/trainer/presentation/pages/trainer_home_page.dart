@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/notifications/notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +19,6 @@ import 'physical_assessment_page.dart';
 import 'financial_management_page.dart';
 import 'trainer_updates_page.dart';
 import '../../domain/entities/student_entity.dart';
-
-
 
 /// Tela principal do Dashboard do Professor
 class TrainerHomePage extends ConsumerStatefulWidget {
@@ -43,13 +42,20 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
     Future.microtask(
       () => ref.read(trainerDashboardProvider.notifier).loadDashboardData(),
     );
+    // Foto do menu já baixada quando ele for aberto.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted)
+        precacheAvatar(context, ref.read(authProvider).user?.photoUrl);
+    });
   }
 
   Future<void> _onRefresh() async {
     await ref.read(trainerDashboardProvider.notifier).refresh();
   }
 
-  void _showSelectStudentSheet(BuildContext context, List<StudentEntity> students, {required void Function(StudentEntity) onSelect}) {
+  void _showSelectStudentSheet(
+      BuildContext context, List<StudentEntity> students,
+      {required void Function(StudentEntity) onSelect}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -73,10 +79,12 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: AppColors.teal.withValues(alpha: 0.1),
-                      child: Text(student.name[0].toUpperCase(), style: const TextStyle(color: AppColors.lightTeal)),
+                      child: Text(student.name[0].toUpperCase(),
+                          style: const TextStyle(color: AppColors.lightTeal)),
                     ),
                     title: Text(student.name, style: AppTextStyles.bodyLarge),
-                    subtitle: Text(student.email, style: AppTextStyles.bodySmall),
+                    subtitle:
+                        Text(student.email, style: AppTextStyles.bodySmall),
                     onTap: () {
                       Navigator.pop(context);
                       onSelect(student);
@@ -113,30 +121,31 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
 
               // Conteúdo
               SliverToBoxAdapter(
-                child: dashboardState.isLoading && dashboardState.students.isEmpty
-                    ? _buildLoading()
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Ativar push neste aparelho
-                          const PushPromptCard(),
+                child:
+                    dashboardState.isLoading && dashboardState.students.isEmpty
+                        ? _buildLoading()
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Ativar push neste aparelho
+                              const PushPromptCard(),
 
-                          // Cards de estatísticas
-                          _buildStatsSection(dashboardState),
+                              // Cards de estatísticas
+                              _buildStatsSection(dashboardState),
 
-                          const SizedBox(height: 24),
+                              const SizedBox(height: 24),
 
-                          // Ações rápidas
-                          _buildQuickActionsSection(dashboardState),
+                              // Ações rápidas
+                              _buildQuickActionsSection(dashboardState),
 
-                          const SizedBox(height: 24),
+                              const SizedBox(height: 24),
 
-                          // Últimos alunos
-                          _buildRecentStudentsSection(dashboardState),
+                              // Últimos alunos
+                              _buildRecentStudentsSection(dashboardState),
 
-                          const SizedBox(height: 24),
-                        ],
-                      ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
               ),
             ],
           ),
@@ -188,7 +197,8 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _capitalize(DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(now)),
+                _capitalize(
+                    DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(now)),
                 style: AppTextStyles.bodySmall,
               ),
               const SizedBox(height: 4),
@@ -219,7 +229,8 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
   Widget _buildStatsSection(TrainerDashboardState state) {
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final currencyFormat =
+        NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -248,11 +259,11 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 icon: Icons.people,
                 iconColor: AppColors.blueLight,
                 onTap: () {
-                      Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const StudentsListPage(),
-                      ),
-                    );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const StudentsListPage(),
+                    ),
+                  );
                 },
               ),
               StatCard(

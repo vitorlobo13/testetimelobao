@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/profile_avatar.dart';
 import '../../../../shared/widgets/confirm_logout.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/notifications/notifications.dart';
@@ -36,13 +37,18 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
       final linkId = ref.read(studentWorkoutProvider).link?.linkId;
       if (linkId != null) ref.read(dietProvider.notifier).loadDiet(linkId);
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted)
+        precacheAvatar(context, ref.read(authProvider).user?.photoUrl);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final workoutState = ref.watch(studentWorkoutProvider);
-    ref.listen(studentWorkoutProvider.select((s) => s.link?.linkId), (_, linkId) {
+    ref.listen(studentWorkoutProvider.select((s) => s.link?.linkId),
+        (_, linkId) {
       if (linkId != null) ref.read(dietProvider.notifier).loadDiet(linkId);
     });
     final userName = authState.user?.name.split(' ').first ?? 'Aluno';
@@ -52,7 +58,9 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            await ref.read(studentWorkoutProvider.notifier).loadCurrentWorkout();
+            await ref
+                .read(studentWorkoutProvider.notifier)
+                .loadCurrentWorkout();
             final linkId = ref.read(studentWorkoutProvider).link?.linkId;
             if (linkId != null) {
               await ref.read(dietProvider.notifier).loadDiet(linkId);
@@ -118,7 +126,8 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
               children: [
                 Text(
                   () {
-                    final d = DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(now);
+                    final d =
+                        DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(now);
                     return d[0].toUpperCase() + d.substring(1);
                   }(),
                   style: AppTextStyles.bodySmall,
@@ -232,42 +241,40 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
           // SEÇÃO: Dieta (ligada ao Firestore na leva 3; até lá fica oculta
           // para o aluno não ver uma dieta de exemplo como se fosse dele)
           if (_dietEnabled) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Minha Dieta',
-                style: AppTextStyles.headlineMedium,
-              ),
-              if (diet != null)
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => DietViewPage(
-                          studentId: ref.read(studentWorkoutProvider).link!.linkId,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Minha Dieta',
+                  style: AppTextStyles.headlineMedium,
+                ),
+                if (diet != null)
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => DietViewPage(
+                            studentId:
+                                ref.read(studentWorkoutProvider).link!.linkId,
+                          ),
                         ),
+                      );
+                    },
+                    child: Text(
+                      'Ver tudo',
+                      style: AppTextStyles.buttonMedium.copyWith(
+                        color: AppColors.teal,
                       ),
-                    );
-                  },
-                  child: Text(
-                    'Ver tudo',
-                    style: AppTextStyles.buttonMedium.copyWith(
-                      color: AppColors.teal,
                     ),
                   ),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          if (diet != null)
-            _buildDietPreview(context, diet)
-          else
-            _buildNoDietCard(),
-
-          const SizedBox(height: 24),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (diet != null)
+              _buildDietPreview(context, diet)
+            else
+              _buildNoDietCard(),
+            const SizedBox(height: 24),
           ],
 
           // Título das divisões

@@ -6,6 +6,19 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import 'avatar_crop_dialog.dart';
+
+/// Mesma "chave" de imagem em todo o app, para o cache servir a foto
+/// já baixada (menu, configurações, perfil) sem buscar de novo.
+ImageProvider avatarImage(String url) => NetworkImage(url,
+    // Cai para <img> quando o CORS do Storage bloqueia o download.
+    webHtmlElementStrategy: WebHtmlElementStrategy.fallback);
+
+/// Baixa a foto em segundo plano logo ao entrar, para o menu abrir com ela.
+void precacheAvatar(BuildContext context, String? url) {
+  if (url == null || url.isEmpty) return;
+  precacheImage(avatarImage(url), context, onError: (_, __) {});
+}
 
 /// Foto de perfil do usuário logado (personal ou aluno).
 /// Com [editable], tocar abre "Escolher foto" / "Remover foto".
@@ -43,14 +56,18 @@ class _ProfileAvatarState extends ConsumerState<ProfileAvatar> {
   Future<void> _pick() async {
     final file = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      maxWidth: 600,
-      maxHeight: 600,
-      imageQuality: 85,
+      // Grande o bastante para dar zoom no rosto; o recorte final é 512 px.
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 92,
     );
-    if (file == null) return;
+    if (file == null || !mounted) return;
     final user = ref.read(authProvider).user;
     if (user == null) return;
-    final bytes = await file.readAsBytes();
+    final picked = await file.readAsBytes();
+    if (!mounted) return;
+    final bytes = await showAvatarCropDialog(context, picked);
+    if (bytes == null || !mounted) return;
     if (bytes.length > _maxBytes) {
       _snack('Foto maior que 5 MB. Escolha outra.', error: true);
       return;
@@ -61,7 +78,13 @@ class _ProfileAvatarState extends ConsumerState<ProfileAvatar> {
       final ref0 = FirebaseStorage.instance.ref(
           'users/${user.id}/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await ref0.putData(
-          bytes, SettableMetadata(contentType: file.mimeType ?? 'image/jpeg'));
+          bytes,
+          SettableMetadata(
+            contentType: 'image/jpeg',
+            // O nome muda a cada troca, então o navegador pode guardar
+            // a foto por muito tempo sem risco de mostrar a antiga.
+            cacheControl: 'public, max-age=31536000, immutable',
+          ));
       final url = await ref0.getDownloadURL();
       await ref.read(authProvider.notifier).updatePhoto(url);
       await widget.onChanged?.call(url);
@@ -144,21 +167,20 @@ class _ProfileAvatarState extends ConsumerState<ProfileAvatar> {
       ),
       alignment: Alignment.center,
       child: _busy
-          ? const CircularProgressIndicator(
-              strokeWidth: 2, color: Colors.white)
+          ? const CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
           : hasPhoto
               // Image (e não DecorationImage): só o widget Image aceita cair
               // para <img> quando o CORS do Storage bloqueia o download.
               ? ClipOval(
-                  child: Image.network(
-                    photo,
+                  child: Image(
+                    image: avatarImage(photo),
                     width: r * 2,
                     height: r * 2,
                     fit: BoxFit.cover,
-                    webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                    gaplessPlayback: true,
                     errorBuilder: (_, __, ___) => Text(initial,
-                        style: AppTextStyles.displaySmall.copyWith(
-                            color: Colors.white, fontSize: r * 0.9)),
+                        style: AppTextStyles.displaySmall
+                            .copyWith(color: Colors.white, fontSize: r * 0.9)),
                   ),
                 )
               : Text(initial,

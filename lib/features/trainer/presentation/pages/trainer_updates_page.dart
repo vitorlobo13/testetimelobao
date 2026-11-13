@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/whatsapp.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../finance/presentation/widgets/payment_actions.dart';
+import '../../../marketing/data/message_templates.dart';
 import '../../domain/entities/student_entity.dart';
 import '../../domain/services/trainer_updates.dart';
 import '../providers/trainer_provider.dart';
@@ -201,8 +202,10 @@ class _UpdateCard extends ConsumerWidget {
 
   List<Widget> _actions(BuildContext context, WidgetRef ref) {
     final trainer = ref.read(authProvider).user?.name ?? '';
-    final sign = trainer.isEmpty ? '' : '\n$trainer';
-    final name = firstName(s.name);
+    final templates =
+        ref.read(messageTemplatesProvider).value ?? kDefaultTemplates;
+    String msg(String id) => templateById(templates, id)
+        .fill(studentName: s.name, trainerName: trainer);
     switch (update.kind) {
       case UpdateKind.workoutExpired:
       case UpdateKind.workoutExpiring:
@@ -216,11 +219,7 @@ class _UpdateCard extends ConsumerWidget {
           _action(
               'Parabenizar no WhatsApp',
               Icons.chat,
-              () => openWhatsApp(
-                  context,
-                  s.phone,
-                  'Parabéns, $name! 🎉 Muita saúde, energia e conquistas '
-                  'nesse novo ciclo. Conte comigo nos treinos!$sign')),
+              () => openWhatsApp(context, s.phone, msg(TemplateIds.birthday))),
         ];
       case UpdateKind.birthdaySoon:
         return const [];
@@ -234,11 +233,7 @@ class _UpdateCard extends ConsumerWidget {
           _action(
               'Chamar no WhatsApp',
               Icons.chat,
-              () => openWhatsApp(
-                  context,
-                  s.phone,
-                  'Oi, $name! Tudo bem? Senti sua falta nos treinos. '
-                  'Bora voltar? Se precisar ajustar algo no treino, me avisa!$sign')),
+              () => openWhatsApp(context, s.phone, msg(TemplateIds.missYou))),
         ];
       case UpdateKind.paymentOverdue:
         return [

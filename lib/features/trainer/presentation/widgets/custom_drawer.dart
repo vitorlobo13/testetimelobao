@@ -10,10 +10,11 @@ import '../pages/diet_library_page.dart';
 import '../pages/financial_management_page.dart';
 import '../pages/settings_page.dart';
 import '../pages/reports_page.dart';
+import '../../../marketing/presentation/marketing_page.dart';
+import '../../../help/presentation/help_page.dart';
 import '../pages/exercise_videos_page.dart';
 import '../pages/physical_assessment_page.dart';
 import '../pages/anamnese_page.dart';
-import '../../../../shared/widgets/feature_placeholder_page.dart';
 
 /// Menu lateral customizado
 class CustomDrawer extends ConsumerWidget {
@@ -176,10 +177,7 @@ class CustomDrawer extends ConsumerWidget {
                       Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const FeaturePlaceholderPage(
-                            title: 'Marketing',
-                            icon: Icons.campaign,
-                          ),
+                          builder: (context) => const MarketingPage(),
                         ),
                       );
                     },
@@ -227,10 +225,7 @@ class CustomDrawer extends ConsumerWidget {
                       Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const FeaturePlaceholderPage(
-                            title: 'Ajuda e Suporte',
-                            icon: Icons.help_outline,
-                          ),
+                          builder: (context) => const HelpPage(),
                         ),
                       );
                     },

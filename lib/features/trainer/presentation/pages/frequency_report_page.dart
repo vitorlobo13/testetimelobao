@@ -103,6 +103,9 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
         ref.watch(trainerSessionsSinceProvider(startOfDay(_dateRange.start)));
     final counts = _countByStudent(sessionsAsync.value ?? const []);
 
+    // Dias no intervalo (rótulo do período)
+    final int days = _dateRange.end.difference(_dateRange.start).inDays + 1;
+
     // Mapeia alunos com seus treinos concluídos no período
     final List<({dynamic student, int workoutCount})> listWithCount = students.map((student) {
       final int count = counts[student.id] ?? 0;

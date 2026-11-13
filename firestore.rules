@@ -142,6 +142,19 @@ service cloud.firestore {
       allow read: if isTrainer() && resource.data.trainerId == request.auth.uid;
     }
 
+    // "Fale com a gente": qualquer conta logada envia em nome próprio;
+    // só a conta admin lê e marca como resolvida.
+    match /feedback/{id} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 4000
+        && request.resource.data.resolved == false;
+      allow read: if isAdmin();
+      allow update: if isAdmin() && onlyChanges(['resolved']);
+      allow delete: if isAdmin();
+    }
+
     // Qualquer outro caminho: fechado.
     match /{document=**} {
       allow read, write: if false;

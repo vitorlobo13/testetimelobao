@@ -9,6 +9,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../providers/admin_provider.dart';
+import '../../../help/data/feedback_repository.dart';
 
 /// Tela da conta administradora: convidar personal, ver/desativar personais
 /// e ligar/desligar o cadastro aberto.
@@ -173,6 +174,41 @@ class _AdminHomePageState extends ConsumerState<AdminHomePage> {
                   : null,
             ),
           ),
+          const SizedBox(height: 32),
+          Text('Mensagens (Fale com a gente)', style: AppTextStyles.headlineSmall),
+          const SizedBox(height: 8),
+          ref.watch(feedbackListProvider).when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) =>
+                    Text('Erro: $e', style: AppTextStyles.bodyMedium),
+                data: (list) => list.isEmpty
+                    ? Text('Nenhuma mensagem ainda.',
+                        style: AppTextStyles.bodyMedium)
+                    : Column(
+                        children: [
+                          for (final f in list)
+                            Card(
+                              color: AppColors.surface,
+                              child: CheckboxListTile(
+                                value: f.resolved,
+                                onChanged: (v) => ref
+                                    .read(feedbackRepositoryProvider)
+                                    .setResolved(f.id, v ?? false),
+                                title: Text('${f.type} · ${f.name}',
+                                    style: AppTextStyles.bodyLarge),
+                                subtitle: Text(
+                                  '${f.message}\n${f.email} · '
+                                  '${f.createdAt.day.toString().padLeft(2, '0')}/'
+                                  '${f.createdAt.month.toString().padLeft(2, '0')}'
+                                  '${f.resolved ? ' · resolvida' : ''}',
+                                  style: AppTextStyles.bodySmall,
+                                ),
+                                isThreeLine: true,
+                              ),
+                            ),
+                        ],
+                      ),
+              ),
         ],
       ),
     );

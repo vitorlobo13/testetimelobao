@@ -1,3 +1,4 @@
+import '../../../invite/presentation/widgets/invite_share_sheet.dart';
 import '../../../../shared/widgets/profile_avatar.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/notifications/notifications.dart';
@@ -44,8 +45,10 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
     );
     // Foto do menu já baixada quando ele for aberto.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted)
-        precacheAvatar(context, ref.read(authProvider).user?.photoUrl);
+      if (!mounted) return;
+      precacheAvatar(context, ref.read(authProvider).user?.photoUrl);
+      // Voltou do WhatsApp e o app recarregou: reabre o convite.
+      resumePendingInviteShare(context);
     });
   }
 

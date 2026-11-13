@@ -141,19 +141,26 @@ class _ProfileAvatarState extends ConsumerState<ProfileAvatar> {
         border: widget.borderColor == null
             ? null
             : Border.all(color: widget.borderColor!, width: 3),
-        image: hasPhoto
-            ? DecorationImage(image: NetworkImage(photo,
-                    // Fotos do Firebase Storage: cai para <img> se o CORS bloquear.
-                    webHtmlElementStrategy: WebHtmlElementStrategy.fallback),
-                fit: BoxFit.cover)
-            : null,
       ),
       alignment: Alignment.center,
       child: _busy
           ? const CircularProgressIndicator(
               strokeWidth: 2, color: Colors.white)
           : hasPhoto
-              ? null
+              // Image (e não DecorationImage): só o widget Image aceita cair
+              // para <img> quando o CORS do Storage bloqueia o download.
+              ? ClipOval(
+                  child: Image.network(
+                    photo,
+                    width: r * 2,
+                    height: r * 2,
+                    fit: BoxFit.cover,
+                    webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                    errorBuilder: (_, __, ___) => Text(initial,
+                        style: AppTextStyles.displaySmall.copyWith(
+                            color: Colors.white, fontSize: r * 0.9)),
+                  ),
+                )
               : Text(initial,
                   style: AppTextStyles.displaySmall
                       .copyWith(color: Colors.white, fontSize: r * 0.9)),

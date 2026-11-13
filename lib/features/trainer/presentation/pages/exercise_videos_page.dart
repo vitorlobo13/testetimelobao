@@ -196,6 +196,7 @@ class _ExerciseTile extends StatelessWidget {
                             format: ThumbnailFormat.jpeg,
                           ),
                           fit: BoxFit.cover,
+                          webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
                           errorBuilder: (_, __, ___) => const SizedBox(),
                         ),
                       Icon(

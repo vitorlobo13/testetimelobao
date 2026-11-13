@@ -67,14 +67,17 @@ class PushService {
   /// Remove o token deste aparelho (ao sair da conta).
   Future<void> unregister(String uid) async {
     try {
+      await _refreshSub?.cancel();
+      // Sem permissão não há token salvo; e no celular o getToken sem
+      // permissão pode travar ou abrir o pedido de notificação.
+      if (!await isGranted()) return;
       final token = await _messaging.getToken(
         vapidKey: kIsWeb ? kWebPushVapidKey : null,
       );
       if (token != null) {
         await _firestore.doc('users/$uid/fcmTokens/$token').delete();
       }
-      await _refreshSub?.cancel();
-    } on Exception catch (e) {
+    } catch (e) {
       developer.log('Falha ao remover token de push', error: e);
     }
   }

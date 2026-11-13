@@ -176,8 +176,16 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> logout() async {
     // Este aparelho para de receber push da conta que está saindo.
+    // No celular isso pode demorar (rede lenta, push do navegador); não
+    // deixamos segurar a saída por mais de 3 segundos.
     final uid = state.user?.id;
-    if (uid != null) await PushService().unregister(uid);
+    if (uid != null) {
+      try {
+        await PushService()
+            .unregister(uid)
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {}
+    }
     await _repository.signOut();
   }
 

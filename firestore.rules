@@ -89,7 +89,7 @@ service cloud.firestore {
         || (isStudent()
           && resource.data.studentUid == request.auth.uid
           && resource.data.linkStatus == 'active'
-          && onlyChanges(['consentAt', 'consentVersion']));
+          && onlyChanges(['consentAt', 'consentVersion', 'photoUrl']));
 
       allow delete: if isTrainer() && resource.data.trainerId == request.auth.uid;
 

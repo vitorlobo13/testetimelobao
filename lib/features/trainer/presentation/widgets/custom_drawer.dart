@@ -9,6 +9,7 @@ import '../pages/workout_library_page.dart';
 import '../pages/diet_library_page.dart';
 import '../pages/financial_management_page.dart';
 import '../pages/settings_page.dart';
+import '../../../../shared/widgets/profile_avatar.dart';
 import '../pages/reports_page.dart';
 import '../../../marketing/presentation/marketing_page.dart';
 import '../../../help/presentation/help_page.dart';
@@ -255,21 +256,8 @@ class CustomDrawer extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.2),
-              border: Border.all(color: Colors.white, width: 3),
-            ),
-            child: const Icon(
-              Icons.person,
-              size: 40,
-              color: Colors.white,
-            ),
-          ),
+          // Avatar (toque para adicionar/trocar a foto)
+          const ProfileAvatar(radius: 35, borderColor: Colors.white),
 
           const SizedBox(height: 16),
 

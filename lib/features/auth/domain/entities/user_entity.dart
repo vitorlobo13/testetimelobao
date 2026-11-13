@@ -20,13 +20,14 @@ class UserEntity {
     this.isActive = true,
   });
 
-  UserEntity copyWith({String? name, String? phone, String? photoUrl}) =>
+  UserEntity copyWith(
+          {String? name, String? phone, String? photoUrl, bool clearPhoto = false}) =>
       UserEntity(
         id: id,
         name: name ?? this.name,
         email: email,
         userType: userType,
-        photoUrl: photoUrl ?? this.photoUrl,
+        photoUrl: clearPhoto ? null : (photoUrl ?? this.photoUrl),
         phone: phone ?? this.phone,
         createdAt: createdAt,
         isActive: isActive,

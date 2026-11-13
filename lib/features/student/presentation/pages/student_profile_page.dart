@@ -10,6 +10,7 @@ import '../../../trainer/domain/entities/physical_measurement_entity.dart';
 import '../../../trainer/presentation/providers/physical_measurement_provider.dart';
 import '../providers/student_workout_provider.dart';
 import '../widgets/student_evolution_section.dart';
+import '../../../../shared/widgets/profile_avatar.dart';
 
 /// Notifier de estado para o perfil do aluno
 class StudentProfileState {
@@ -244,16 +245,15 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          ProfileAvatar(
             radius: 36,
-            backgroundColor: AppColors.teal.withValues(alpha: 0.2),
-            child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : 'A',
-              style: AppTextStyles.displaySmall.copyWith(
-                color: AppColors.lightTeal,
-                fontSize: 32,
-              ),
-            ),
+            onChanged: (url) async {
+              final link = ref.read(studentWorkoutProvider).link;
+              if (link == null) return;
+              await FirebaseFirestore.instance
+                  .doc('studentLinks/${link.linkId}')
+                  .update({'photoUrl': url});
+            },
           ),
           const SizedBox(width: 16),
           Expanded(

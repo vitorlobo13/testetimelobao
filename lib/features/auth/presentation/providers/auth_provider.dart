@@ -191,6 +191,17 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<void> updatePhoto(String? url) async {
+    await _repository.updatePhoto(url);
+    final user = state.user;
+    if (user != null) {
+      state = state.copyWith(
+          user: url == null
+              ? user.copyWith(clearPhoto: true)
+              : user.copyWith(photoUrl: url));
+    }
+  }
+
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,

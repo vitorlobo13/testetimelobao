@@ -199,6 +199,16 @@ class AuthRepository {
     await user.updateDisplayName(name.trim());
   }
 
+  /// Grava (ou remove, com null) a foto de perfil em `users/{uid}`.
+  Future<void> updatePhoto(String? url) async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthFailure('Faça login para continuar.');
+    await _firestore.doc('users/${user.uid}').update({
+      'photoUrl': url,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   /// Troca a senha confirmando a senha atual (o Firebase exige login recente).
   Future<void> changePassword({
     required String currentPassword,

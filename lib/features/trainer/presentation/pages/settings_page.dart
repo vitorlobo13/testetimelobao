@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/data/repositories/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../shared/widgets/profile_avatar.dart';
 import '../../domain/services/trainer_updates.dart';
 import '../providers/trainer_settings_provider.dart';
 
@@ -107,6 +108,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             title: 'Meu perfil',
             icon: Icons.person_outline,
             children: [
+              const Center(child: ProfileAvatar(radius: 44)),
+              const SizedBox(height: 6),
+              Center(
+                child: Text('Toque na foto para trocar',
+                    style: AppTextStyles.bodySmall
+                        .copyWith(color: AppColors.textTertiary)),
+              ),
+              const SizedBox(height: 16),
               _field(_name, 'Nome', Icons.badge_outlined),
               const SizedBox(height: 12),
               _field(_phone, 'Telefone (WhatsApp)', Icons.phone_outlined,

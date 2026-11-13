@@ -1,5 +1,5 @@
 /**
- * Cloud Functions do Time Lobão.
+ * Cloud Functions do Time Lobo Lopes.
  *
  * Tudo que define o PAPEL de uma conta (admin / trainer / student) passa
  * por aqui: o app nunca grava papel direto. O papel fica no custom claim

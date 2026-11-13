@@ -35,7 +35,7 @@ void main() async {
   );
 }
 
-/// Aplicativo Principal Time Lobão
+/// Aplicativo principal Time Lobo Lopes
 class TimeLobaoApp extends ConsumerWidget {
   const TimeLobaoApp({super.key});
 

@@ -152,8 +152,8 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
     final profileState = ref.watch(studentProfileProvider);
     final user = authState.user;
 
-    final userName = user?.name ?? 'Aluno Lobão';
-    final userEmail = user?.email ?? 'aluno@timelobao.com.br';
+    final userName = user?.name ?? 'Aluno';
+    final userEmail = user?.email ?? '';
 
     return Scaffold(
       backgroundColor: AppColors.background,

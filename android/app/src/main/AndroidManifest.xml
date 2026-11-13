@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="time_lobao"
+        android:label="Time Lobo Lopes"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

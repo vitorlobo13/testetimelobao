@@ -65,6 +65,7 @@ class AuthRepository {
       email: user.email ?? '',
       userType: UserTypeExtension.fromString(role),
       photoUrl: data['photoUrl'] as String?,
+      phone: data['phone'] as String?,
       createdAt: createdAt is Timestamp ? createdAt.toDate() : DateTime.now(),
       isActive: data['active'] as bool? ?? true,
     );
@@ -185,6 +186,36 @@ class AuthRepository {
   }
 
   Future<void> signOut() => _auth.signOut();
+
+  /// Atualiza nome e telefone do próprio perfil (`users/{uid}`).
+  Future<void> updateProfile({required String name, String? phone}) async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthFailure('Faça login para continuar.');
+    await _firestore.doc('users/${user.uid}').update({
+      'name': name.trim(),
+      'phone': (phone == null || phone.trim().isEmpty) ? null : phone.trim(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    await user.updateDisplayName(name.trim());
+  }
+
+  /// Troca a senha confirmando a senha atual (o Firebase exige login recente).
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      throw const AuthFailure('Faça login para continuar.');
+    }
+    try {
+      await user.reauthenticateWithCredential(EmailAuthProvider.credential(
+          email: user.email!, password: currentPassword));
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure(_translate(e));
+    }
+  }
 
   String _translate(FirebaseAuthException e) {
     switch (e.code) {

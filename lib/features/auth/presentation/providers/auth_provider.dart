@@ -181,6 +181,23 @@ class AuthNotifier extends Notifier<AuthState> {
     await _repository.signOut();
   }
 
+  /// Salva nome/telefone e já reflete no estado (sem recarregar a sessão).
+  Future<void> updateProfile({required String name, String? phone}) async {
+    await _repository.updateProfile(name: name, phone: phone);
+    final user = state.user;
+    if (user != null) {
+      state = state.copyWith(
+          user: user.copyWith(name: name.trim(), phone: phone?.trim() ?? ''));
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) =>
+      _repository.changePassword(
+          currentPassword: currentPassword, newPassword: newPassword);
+
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }

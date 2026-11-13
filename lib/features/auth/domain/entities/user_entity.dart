@@ -5,6 +5,7 @@ class UserEntity {
   final String email;
   final UserType userType;
   final String? photoUrl;
+  final String? phone;
   final DateTime createdAt;
   final bool isActive;
 
@@ -14,9 +15,22 @@ class UserEntity {
     required this.email,
     required this.userType,
     this.photoUrl,
+    this.phone,
     required this.createdAt,
     this.isActive = true,
   });
+
+  UserEntity copyWith({String? name, String? phone, String? photoUrl}) =>
+      UserEntity(
+        id: id,
+        name: name ?? this.name,
+        email: email,
+        userType: userType,
+        photoUrl: photoUrl ?? this.photoUrl,
+        phone: phone ?? this.phone,
+        createdAt: createdAt,
+        isActive: isActive,
+      );
 
   /// Verifica se é Professor
   bool get isTrainer => userType == UserType.trainer;

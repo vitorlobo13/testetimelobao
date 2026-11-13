@@ -44,6 +44,27 @@ class UpdateSettings {
   final int birthdaySoonDays;
   final int assessmentEveryDays;
   final int inactiveDays;
+
+  static int _int(Object? v, int fallback) =>
+      v is num && v > 0 ? v.toInt() : fallback;
+
+  factory UpdateSettings.fromMap(Map<String, dynamic>? d) {
+    const def = UpdateSettings();
+    if (d == null) return def;
+    return UpdateSettings(
+      workoutExpiringDays: _int(d['workoutExpiringDays'], def.workoutExpiringDays),
+      birthdaySoonDays: _int(d['birthdaySoonDays'], def.birthdaySoonDays),
+      assessmentEveryDays: _int(d['assessmentEveryDays'], def.assessmentEveryDays),
+      inactiveDays: _int(d['inactiveDays'], def.inactiveDays),
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'workoutExpiringDays': workoutExpiringDays,
+        'birthdaySoonDays': birthdaySoonDays,
+        'assessmentEveryDays': assessmentEveryDays,
+        'inactiveDays': inactiveDays,
+      };
 }
 
 class TrainerUpdate {

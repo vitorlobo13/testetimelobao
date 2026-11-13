@@ -8,6 +8,7 @@ import '../pages/frequency_report_page.dart';
 import '../pages/workout_library_page.dart';
 import '../pages/diet_library_page.dart';
 import '../pages/financial_management_page.dart';
+import '../pages/settings_page.dart';
 import '../pages/exercise_videos_page.dart';
 import '../pages/physical_assessment_page.dart';
 import '../pages/anamnese_page.dart';
@@ -214,10 +215,7 @@ class CustomDrawer extends ConsumerWidget {
                       Navigator.popUntil(context, (route) => route.isFirst);
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const FeaturePlaceholderPage(
-                            title: 'Configurações',
-                            icon: Icons.settings,
-                          ),
+                          builder: (context) => const SettingsPage(),
                         ),
                       );
                     },

@@ -9,6 +9,7 @@ import '../../../finance/presentation/widgets/payment_actions.dart';
 import '../../domain/entities/student_entity.dart';
 import '../../domain/services/trainer_updates.dart';
 import '../providers/trainer_provider.dart';
+import '../providers/trainer_settings_provider.dart';
 import 'create_workout_page.dart';
 import 'physical_assessment_page.dart';
 import 'student_detail_page.dart';
@@ -16,7 +17,9 @@ import 'student_detail_page.dart';
 /// Atualizações calculadas a partir dos alunos (tempo real).
 final trainerUpdatesProvider = Provider<List<TrainerUpdate>>((ref) {
   final students = ref.watch(trainerDashboardProvider).students;
-  return computeTrainerUpdates(students);
+  final settings =
+      ref.watch(updateSettingsProvider).value ?? const UpdateSettings();
+  return computeTrainerUpdates(students, settings: settings);
 });
 
 /// Ícone "Atualizações" da barra do personal, com o número de pendências.

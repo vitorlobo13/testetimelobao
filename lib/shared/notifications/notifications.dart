@@ -216,7 +216,7 @@ class _PushPromptCardState extends ConsumerState<PushPromptCard> {
   Widget build(BuildContext context) {
     if (!_visible) return const SizedBox.shrink();
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -246,7 +246,7 @@ class _PushPromptCardState extends ConsumerState<PushPromptCard> {
                 ? const SizedBox(
                     width: 16, height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('ATIVAR'),
+                : const Text('Ativar'),
           ),
           IconButton(
             tooltip: 'Agora não',

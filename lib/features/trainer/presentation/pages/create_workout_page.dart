@@ -260,10 +260,10 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Nova Divisão', style: AppTextStyles.headlineMedium),
+        title: Text('Nova divisão', style: AppTextStyles.headlineMedium),
         content: CustomTextField(
-          label: 'Nome da Divisão',
-          hint: 'Ex: Treino A, Push, Peito e Tríceps...',
+          label: 'Nome',
+          hint: 'A · Inferiores',
           controller: _divisionNameController,
           prefixIcon: Icons.fitness_center,
         ),

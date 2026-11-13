@@ -180,8 +180,10 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(76),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        child: Container(
+          width: double.infinity,
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -263,7 +265,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 },
               ),
               StatCard(
-                title: 'Pagamentos pendentes',
+                title: 'Pendentes',
                 value: state.pendingPayments.toString(),
                 icon: Icons.schedule,
                 iconColor: AppColors.pink,
@@ -273,7 +275,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 onTap: _openFinance,
               ),
               StatCard(
-                title: 'Receita prevista/mês',
+                title: 'Receita/mês',
                 value: currencyFormat.format(state.monthlyRevenue),
                 icon: Icons.attach_money,
                 iconColor: AppColors.success,

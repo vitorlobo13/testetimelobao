@@ -53,7 +53,7 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.people,
-                    title: 'Meus Alunos',
+                    title: 'Meus alunos',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.popUntil(context, (route) => route.isFirst);
@@ -81,7 +81,7 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.fitness_center,
-                    title: 'Biblioteca de Treinos',
+                    title: 'Biblioteca de treinos',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.popUntil(context, (route) => route.isFirst);
@@ -95,7 +95,7 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.video_library,
-                    title: 'Meus Exercícios',
+                    title: 'Meus exercícios',
                     subtitle: 'Catálogo e vídeos',
                     onTap: () {
                       Navigator.pop(context);
@@ -110,7 +110,7 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.assessment,
-                    title: 'Avaliações Físicas',
+                    title: 'Avaliações físicas',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.popUntil(context, (route) => route.isFirst);
@@ -124,7 +124,7 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.restaurant_menu,
-                    title: 'Nutrição e Dietas',
+                    title: 'Nutrição e dietas',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.popUntil(context, (route) => route.isFirst);
@@ -158,7 +158,7 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.attach_money,
-                    title: 'Gestão Financeira',
+                    title: 'Gestão financeira',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.popUntil(context, (route) => route.isFirst);
@@ -220,7 +220,7 @@ class CustomDrawer extends ConsumerWidget {
                   _buildMenuItem(
                     context,
                     icon: Icons.help_outline,
-                    title: 'Ajuda e Suporte',
+                    title: 'Ajuda e suporte',
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.popUntil(context, (route) => route.isFirst);
@@ -245,6 +245,7 @@ class CustomDrawer extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context, String userName) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         // Superfície lisa com o traço azul → rosa da marca embaixo.

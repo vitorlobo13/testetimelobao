@@ -130,13 +130,17 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                         'Erro ao carregar treinos: ${sessionsAsync.error}',
                         style: const TextStyle(color: AppColors.error)),
                   ),
-                GridView.count(
-                  crossAxisCount: 2,
+                GridView(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.6,
+                  // Altura fixa: não estica os cartões em tela larga.
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    mainAxisExtent: 112,
+                  ),
                   children: [
                     _Kpi(Icons.people, 'Alunos ativos', '${active.length}',
                         '$newStudents novo(s) no período'),

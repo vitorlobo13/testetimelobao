@@ -23,6 +23,21 @@ class ExerciseEntity {
     this.description,
     this.instructions = const [],
   });
+
+  /// Cópia com outro vídeo (`clearVideo` remove o vídeo).
+  ExerciseEntity copyWith({String? videoUrl, bool clearVideo = false}) =>
+      ExerciseEntity(
+        id: id,
+        name: name,
+        category: category,
+        muscleGroup: muscleGroup,
+        equipment: equipment,
+        difficulty: difficulty,
+        videoUrl: clearVideo ? null : (videoUrl ?? this.videoUrl),
+        thumbnailUrl: thumbnailUrl,
+        description: description,
+        instructions: instructions,
+      );
 }
 
 /// Categorias de exercícios

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/exercise_video_player.dart';
 import '../../domain/entities/workout_entity.dart';
 
 /// Card de exercício no treino (com configurações)
@@ -129,14 +130,11 @@ class WorkoutExerciseCard extends StatelessWidget {
                   workoutExercise.exercise.videoUrl!.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 InkWell(
-                  onTap: () {
-                     ScaffoldMessenger.of(context).showSnackBar(
-                       SnackBar(
-                         content: Text('Assistindo vídeo: ${workoutExercise.exercise.videoUrl}'),
-                         backgroundColor: AppColors.teal,
-                       ),
-                     );
-                  },
+                  onTap: () => showExerciseVideo(
+                    context,
+                    title: workoutExercise.exercise.name,
+                    videoUrl: workoutExercise.exercise.videoUrl!,
+                  ),
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -153,7 +151,7 @@ class WorkoutExerciseCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Vídeo Explicativo Anexado',
+                            'Vídeo de demonstração · toque para assistir',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.teal,
                               fontWeight: FontWeight.bold,
@@ -163,6 +161,20 @@ class WorkoutExerciseCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                ),
+              ] else ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(Icons.videocam_off_outlined,
+                        size: 16, color: AppColors.textTertiary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Sem vídeo — toque no exercício para anexar',
+                      style: AppTextStyles.bodySmall
+                          .copyWith(color: AppColors.textTertiary),
+                    ),
+                  ],
                 ),
               ],
             ],

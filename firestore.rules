@@ -137,6 +137,11 @@ service cloud.firestore {
       allow read: if isTrainer() && resource.data.trainerId == request.auth.uid;
     }
 
+    // Consulta em grupo dos treinos executados (relatórios do personal).
+    match /{path=**}/sessions/{sessionId} {
+      allow read: if isTrainer() && resource.data.trainerId == request.auth.uid;
+    }
+
     // Qualquer outro caminho: fechado.
     match /{document=**} {
       allow read, write: if false;

@@ -4,8 +4,28 @@
       "collectionGroup": "payments",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "trainerId", "order": "ASCENDING" },
-        { "fieldPath": "paidAt", "order": "DESCENDING" }
+        {
+          "fieldPath": "trainerId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "paidAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "trainerId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "startTime",
+          "order": "DESCENDING"
+        }
       ]
     }
   ],

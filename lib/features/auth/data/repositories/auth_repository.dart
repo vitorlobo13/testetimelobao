@@ -213,6 +213,9 @@ class AuthRepository {
           email: user.email!, password: currentPassword));
       await user.updatePassword(newPassword);
     } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw const AuthFailure('Senha atual incorreta.');
+      }
       throw AuthFailure(_translate(e));
     }
   }

@@ -208,8 +208,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   ),
                   const Spacer(),
                   SizedBox(
-                    width: 180,
-                    child: _button('SALVAR PRAZOS', Icons.save,
+                    width: 150,
+                    child: _button('SALVAR', Icons.save,
                         _savingDeadlines,
                         changed ? () => _saveDeadlines(_draft!) : null),
                   ),

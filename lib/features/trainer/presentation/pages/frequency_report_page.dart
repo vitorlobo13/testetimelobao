@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../domain/entities/student_entity.dart';
 import '../providers/trainer_provider.dart';
+import '../providers/trainer_sessions_provider.dart';
 import '../widgets/custom_drawer.dart';
 
 class FrequencyReportPage extends ConsumerStatefulWidget {
@@ -78,34 +80,32 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
     }
   }
 
-  /// Gera a quantidade de treinos para o aluno baseado no intervalo de datas e no ID do aluno
-  int _calculateWorkoutsForStudent(String studentId, int days) {
-    // Coeficiente semanal determinístico baseado no hash do ID
-    final int hash = studentId.hashCode.abs();
-    final double weeklyRate = 2.0 + (hash % 4); // Frequência média semanal entre 2.0 e 5.0 treinos
-    
-    // Calcula o total proporcional aos dias
-    final double weeks = days / 7.0;
-    int calculated = (weeks * weeklyRate).round();
-
-    // Pequena variação para não ficar totalmente fixo
-    final int variance = (hash % 3) - 1; // -1, 0, ou 1
-    calculated = (calculated + variance).clamp(0, 999);
-
-    return calculated;
+  /// Treinos concluídos de cada aluno no período (dados reais).
+  Map<String, int> _countByStudent(List<SessionSummary> sessions) {
+    final end = startOfDay(_dateRange.end).add(const Duration(days: 1));
+    final counts = <String, int>{};
+    for (final x in sessions) {
+      if (x.startTime.isBefore(end)) {
+        counts[x.linkId] = (counts[x.linkId] ?? 0) + 1;
+      }
+    }
+    return counts;
   }
 
   @override
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(trainerDashboardProvider);
-    final students = dashboardState.students;
+    // Alunos atuais (quem foi para outro personal não entra).
+    final students = dashboardState.students
+        .where((s) => s.linkStatus != LinkStatus.archived)
+        .toList();
+    final sessionsAsync =
+        ref.watch(trainerSessionsSinceProvider(startOfDay(_dateRange.start)));
+    final counts = _countByStudent(sessionsAsync.value ?? const []);
 
-    // Calcula os dias no intervalo
-    final int days = _dateRange.end.difference(_dateRange.start).inDays + 1;
-
-    // Mapeia alunos com seus treinos calculados
+    // Mapeia alunos com seus treinos concluídos no período
     final List<({dynamic student, int workoutCount})> listWithCount = students.map((student) {
-      final int count = _calculateWorkoutsForStudent(student.id, days);
+      final int count = counts[student.id] ?? 0;
       return (student: student, workoutCount: count);
     }).toList();
 
@@ -145,7 +145,7 @@ class _FrequencyReportPageState extends ConsumerState<FrequencyReportPage> {
           ),
         ),
       ),
-      body: dashboardState.isLoading
+      body: dashboardState.isLoading || sessionsAsync.isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.teal))
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,

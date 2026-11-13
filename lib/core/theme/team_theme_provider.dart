@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_colors.dart';
+import 'browser_theme_color.dart';
 
 const _prefsKey = 'team_theme';
 
@@ -12,10 +13,12 @@ Future<void> loadSavedTeamTheme() async {
   try {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_prefsKey);
-    AppColors.use(saved == TeamTheme.lopes.name ? TeamTheme.lopes : TeamTheme.lobo);
+    AppColors.use(
+        saved == TeamTheme.lopes.name ? TeamTheme.lopes : TeamTheme.lobo);
   } catch (_) {
     AppColors.use(TeamTheme.lobo);
   }
+  setBrowserThemeColor(AppColors.background);
 }
 
 class TeamThemeNotifier extends Notifier<TeamTheme> {
@@ -24,6 +27,8 @@ class TeamThemeNotifier extends Notifier<TeamTheme> {
 
   Future<void> set(TeamTheme team) async {
     AppColors.use(team);
+    // Faixa do topo do iPhone (hora, bateria) acompanha o visual.
+    setBrowserThemeColor(AppColors.background);
     state = team;
     try {
       final prefs = await SharedPreferences.getInstance();

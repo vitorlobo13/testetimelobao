@@ -17,12 +17,15 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Time Lobo Lopes: treinos, avaliações e acompanhamento com seu personal.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <!-- Faixa do topo (hora, bateria) transparente: a cor que aparece ali é o
+       fundo da página, que o app troca na hora junto com o visual. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0B1428">
   <meta name="apple-mobile-web-app-title" content="Time Lobo Lopes">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=2">
@@ -32,10 +35,15 @@
 
   <title>Time Lobo Lopes</title>
   <link rel="manifest" href="manifest.json">
-  <!-- Fundo escuro enquanto o app carrega (evita a tela branca). -->
-  <style>html, body { background: #0B1428; }</style>
+  <!-- Fundo escuro enquanto o app carrega (evita a tela branca). O app
+       desenha dentro de #app, abaixo da faixa do topo do iPhone. -->
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #0B1428; }
+    #app { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; bottom: 0; }
+  </style>
 </head>
 <body>
+  <div id="app"></div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

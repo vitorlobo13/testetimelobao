@@ -1,5 +1,5 @@
 import '../../../../shared/widgets/profile_avatar.dart';
-import '../../../../shared/widgets/confirm_logout.dart';
+import '../widgets/student_drawer.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/notifications/notifications.dart';
 import '../widgets/student_evolution_section.dart';
@@ -15,8 +15,6 @@ import '../../../trainer/domain/entities/workout_entity.dart';
 import '../providers/student_workout_provider.dart';
 import '../widgets/workout_card.dart';
 import 'workout_execution_page.dart';
-import 'workout_history_page.dart';
-import 'student_profile_page.dart';
 
 /// Tela home do aluno
 class StudentHomePage extends ConsumerStatefulWidget {
@@ -55,6 +53,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: const StudentDrawer(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -115,6 +114,13 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
       backgroundColor: AppColors.background,
       surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
+      leading: Builder(
+        builder: (context) => IconButton(
+          tooltip: 'Menu',
+          icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(76),
         child: Padding(
@@ -153,32 +159,8 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
         ),
       ),
       actions: [
+        // Histórico, perfil e sair ficaram no menu (☰).
         const NotificationBell(),
-        IconButton(
-          icon: const Icon(Icons.history, color: AppColors.textPrimary),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const WorkoutHistoryPage(),
-              ),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.person_outline, color: AppColors.textPrimary),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const StudentProfilePage(),
-              ),
-            );
-          },
-        ),
-        IconButton(
-          tooltip: 'Sair',
-          icon: const Icon(Icons.logout, color: AppColors.textPrimary),
-          onPressed: () => confirmLogout(context, ref),
-        ),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,14 +27,19 @@ class TeamThemeNotifier extends Notifier<TeamTheme> {
   TeamTheme build() => AppColors.team;
 
   Future<void> set(TeamTheme team) async {
-    AppColors.use(team);
-    // Faixa do topo do iPhone (hora, bateria) acompanha o visual.
-    setBrowserThemeColor(AppColors.background);
-    state = team;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKey, team.name);
     } catch (_) {}
+    // No iPhone a faixa do topo (hora, bateria) só pega a cor nova quando o
+    // app carrega: recarrega já com o visual salvo (continua logado).
+    if (kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      reloadPage();
+      return;
+    }
+    AppColors.use(team);
+    setBrowserThemeColor(AppColors.background);
+    state = team;
   }
 
   Future<void> toggle() => set(state.other);

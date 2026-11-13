@@ -14,3 +14,5 @@ void setBrowserThemeColor(Color color) {
   web.document.documentElement?.setAttribute('style', 'background: $hex');
   web.document.body?.style.background = hex;
 }
+
+void reloadPage() => web.window.location.reload();

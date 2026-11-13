@@ -141,17 +141,27 @@ class _ExerciseVideosPageState extends ConsumerState<ExerciseVideosPage> {
     );
   }
 
-  Future<void> _openEditor(ExerciseEntity? exercise) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => _ExerciseEditor(exercise: exercise),
-    );
-  }
+  Future<void> _openEditor(ExerciseEntity? exercise) =>
+      showExerciseEditor(context, exercise: exercise);
+}
+
+/// Abre o formulário de exercício. Devolve o exercício salvo (com id),
+/// ou null se a pessoa fechar sem salvar ou excluir.
+Future<ExerciseEntity?> showExerciseEditor(
+  BuildContext context, {
+  ExerciseEntity? exercise,
+  String? initialName,
+}) {
+  return showModalBottomSheet<ExerciseEntity>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) =>
+        _ExerciseEditor(exercise: exercise, initialName: initialName),
+  );
 }
 
 class _ExerciseTile extends StatelessWidget {
@@ -239,8 +249,11 @@ class _ExerciseTile extends StatelessWidget {
 
 /// Criar/editar exercício e anexar vídeo (link ou arquivo de até 30 s).
 class _ExerciseEditor extends ConsumerStatefulWidget {
-  const _ExerciseEditor({this.exercise});
+  const _ExerciseEditor({this.exercise, this.initialName});
   final ExerciseEntity? exercise;
+
+  /// Nome já preenchido ao criar (ex.: o que foi digitado na busca).
+  final String? initialName;
 
   @override
   ConsumerState<_ExerciseEditor> createState() => _ExerciseEditorState();
@@ -249,7 +262,8 @@ class _ExerciseEditor extends ConsumerStatefulWidget {
 class _ExerciseEditorState extends ConsumerState<_ExerciseEditor> {
   final _formKey = GlobalKey<FormState>();
   final _storage = ExerciseVideoStorage();
-  late final _name = TextEditingController(text: widget.exercise?.name);
+  late final _name =
+      TextEditingController(text: widget.exercise?.name ?? widget.initialName);
   late final _muscle = TextEditingController(text: widget.exercise?.muscleGroup);
   late final _equipment = TextEditingController(text: widget.exercise?.equipment);
   late final _url = TextEditingController(text: widget.exercise?.videoUrl);
@@ -320,6 +334,7 @@ class _ExerciseEditorState extends ConsumerState<_ExerciseEditor> {
       );
 
       final id = _isNew ? await notifier.createExercise(exercise) : exercise.id;
+      exercise = _withId(exercise, id);
 
       final video = _pickedVideo;
       if (video != null) {
@@ -337,8 +352,8 @@ class _ExerciseEditorState extends ConsumerState<_ExerciseEditor> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context);
       _toast(_isNew ? 'Exercício criado!' : 'Exercício atualizado!');
+      Navigator.pop(context, exercise);
     } on FirebaseException catch (e) {
       _toast('Erro ao salvar: ${e.message}', error: true);
     } finally {

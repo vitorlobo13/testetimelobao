@@ -5,8 +5,10 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/exercise_entity.dart';
 import '../providers/exercises_provider.dart';
 import '../widgets/exercise_selector_card.dart';
+import 'exercise_videos_page.dart';
 
-/// Bottom Sheet para selecionar exercícios
+/// Bottom Sheet para selecionar exercícios.
+/// Fecha devolvendo o exercício escolhido (ou criado na hora).
 class ExerciseSelectorSheet extends ConsumerStatefulWidget {
   final Function(ExerciseEntity) onExerciseSelected;
 
@@ -35,6 +37,17 @@ class _ExerciseSelectorSheetState extends ConsumerState<ExerciseSelectorSheet> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Cria um exercício novo (fica salvo em Meus Exercícios) e já o usa.
+  Future<void> _createNew() async {
+    final created = await showExerciseEditor(
+      context,
+      initialName: _searchController.text.trim(),
+    );
+    if (created == null || !mounted) return;
+    widget.onExerciseSelected(created);
+    Navigator.pop(context, created);
   }
 
   void _onSearchChanged() {
@@ -89,7 +102,13 @@ class _ExerciseSelectorSheetState extends ConsumerState<ExerciseSelectorSheet> {
                     style: AppTextStyles.headlineMedium,
                   ),
                 ),
+                TextButton.icon(
+                  onPressed: _createNew,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Novo'),
+                ),
                 IconButton(
+                  tooltip: 'Fechar',
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -152,7 +171,7 @@ class _ExerciseSelectorSheetState extends ConsumerState<ExerciseSelectorSheet> {
                             exercise: exercise,
                             onTap: () {
                               widget.onExerciseSelected(exercise);
-                              Navigator.pop(context);
+                              Navigator.pop(context, exercise);
                             },
                           );
                         },
@@ -202,6 +221,14 @@ class _ExerciseSelectorSheetState extends ConsumerState<ExerciseSelectorSheet> {
             style: AppTextStyles.bodyLarge.copyWith(
               color: AppColors.textSecondary,
             ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: _createNew,
+            icon: const Icon(Icons.add),
+            label: Text(_searchController.text.trim().isEmpty
+                ? 'Criar exercício'
+                : 'Criar "${_searchController.text.trim()}"'),
           ),
         ],
       ),

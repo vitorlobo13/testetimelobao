@@ -7,6 +7,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
+import '../../domain/entities/exercise_entity.dart';
 import '../../domain/entities/student_entity.dart';
 import '../../domain/entities/workout_entity.dart';
 import '../providers/workout_builder_provider.dart';
@@ -298,8 +299,8 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
     );
   }
 
-  void _showExerciseSelector() {
-    showModalBottomSheet(
+  Future<void> _showExerciseSelector() async {
+    final added = await showModalBottomSheet<ExerciseEntity>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -309,6 +310,11 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
         },
       ),
     );
+    if (added == null || !mounted) return;
+    // Já abre séries/repetições/descanso do exercício que acabou de entrar.
+    final division = ref.read(workoutBuilderProvider).currentDivision;
+    if (division == null || division.exercises.isEmpty) return;
+    _showExerciseConfig(division.exercises.length - 1);
   }
 
   void _showExerciseConfig(int exerciseIndex) {

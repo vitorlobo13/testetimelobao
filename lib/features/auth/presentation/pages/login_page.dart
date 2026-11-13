@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/brand_wordmark.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -219,47 +220,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Column(
       children: [
         // Logo Placeholder
-        Container(
-            width: 200, // Aumentei um pouco para valorizar os detalhes da logo
-            height: 200,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              // Mantive a sombra para dar profundidade, mas removi o fundo verde
-              boxShadow: AppColors.shadowLarge,
-            ),
-            child: ClipOval(
-              child: Image.asset(
-                'lib/assets/icons/logo.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // Caso o caminho esteja errado, ele mostra o halter para o app não crashar
-                  return Icon(Icons.fitness_center, size: 70, color: AppColors.teal);
-                },
-              ),
-            ),
-          ),
+        const BrandWordmark(size: 46),
 
-        const SizedBox(height: 24),
-
-        // Título
-        ShaderMask(
-          shaderCallback: (bounds) =>
-              AppColors.primaryGradient.createShader(bounds),
-          child: Text(
-            'TIME LOBÃO',
-            style: AppTextStyles.displayMedium.copyWith(
-              color: Colors.white,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 8),
+        const SizedBox(height: 28),
 
         Text(
-          'Bem-vindo de volta!',
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          'Bem-vindo de volta',
+          style: AppTextStyles.voice.copyWith(fontSize: 26),
         ),
       ],
     );

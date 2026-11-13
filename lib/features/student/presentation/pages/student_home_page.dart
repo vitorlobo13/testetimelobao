@@ -100,39 +100,43 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
       greeting = 'Boa noite';
     }
 
+    // Saudação no estilo da marca, abaixo dos ícones (sem sobrepor).
     return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
       pinned: true,
       backgroundColor: AppColors.background,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$greeting, $userName! 💪',
-              style: AppTextStyles.headlineMedium.copyWith(fontSize: 18),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              DateFormat('EEEE, d MMMM', 'pt_BR').format(now),
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textTertiary,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.darkTeal.withValues(alpha: 0.1),
-                AppColors.background,
+      surfaceTintColor: Colors.transparent,
+      automaticallyImplyLeading: false,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(76),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  () {
+                    final d = DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(now);
+                    return d[0].toUpperCase() + d.substring(1);
+                  }(),
+                  style: AppTextStyles.bodySmall,
+                ),
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text.rich(TextSpan(children: [
+                    TextSpan(text: '$greeting, ', style: AppTextStyles.voice),
+                    TextSpan(
+                      text: '$userName.',
+                      style: AppTextStyles.voice.copyWith(
+                        color: AppColors.pink,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ])),
+                ),
               ],
             ),
           ),
@@ -406,15 +410,10 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.success.withValues(alpha: 0.8),
-              AppColors.success,
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
+          // Superfície lisa com borda (antes: degradê verde chamativo).
+          color: AppColors.surface,
+          border: Border.all(color: AppColors.outline),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: AppColors.shadowLarge,
         ),
         child: Column(

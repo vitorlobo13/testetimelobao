@@ -42,7 +42,7 @@ class TimeLobaoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'Time Lobão',
+      title: 'Time Lobo Lopes',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       routerConfig: ref.watch(appRouterProvider),

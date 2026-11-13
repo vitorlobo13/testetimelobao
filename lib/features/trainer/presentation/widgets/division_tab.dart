@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
-/// Tab de divisão de treino
+/// Etiqueta (pílula) de divisão do treino: nome + nº de exercícios em uma
+/// linha só, altura fixa de 44 px (cabe sem espremer).
 class DivisionTab extends StatelessWidget {
   final String name;
   final int exerciseCount;
@@ -21,57 +22,59 @@ class DivisionTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: isSelected ? AppColors.primaryGradient : null,
-          color: isSelected ? null : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.teal : AppColors.surfaceLight,
-            width: isSelected ? 2 : 1,
+    final fg = isSelected ? Colors.white : AppColors.textPrimary;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: isSelected ? AppColors.blue : AppColors.surface,
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: isSelected ? AppColors.blue : AppColors.outline,
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Container(
+            height: 44,
+            padding: EdgeInsets.only(
+                left: 16, right: onDelete != null && !isSelected ? 8 : 16),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   name,
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: fg,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(width: 6),
                 Text(
-                  '$exerciseCount exercício(s)',
+                  '$exerciseCount',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: isSelected
-                        ? Colors.white.withValues(alpha: 0.8)
+                        ? Colors.white.withValues(alpha: 0.75)
                         : AppColors.textTertiary,
-                    fontSize: 10,
                   ),
                 ),
+                if (onDelete != null && !isSelected) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    tooltip: 'Remover divisão',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 28, minHeight: 28),
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.close,
+                        size: 16, color: AppColors.textTertiary),
+                  ),
+                ],
               ],
             ),
-            if (onDelete != null && !isSelected) ...[
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onDelete,
-                child: const Icon(
-                  Icons.close,
-                  size: 18,
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

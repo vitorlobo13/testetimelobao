@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import '../../../../shared/widgets/brand_wordmark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -176,10 +177,11 @@ class _InviteFormState extends ConsumerState<_InviteForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset('lib/assets/icons/logo.png', height: 120),
-            const SizedBox(height: 16),
-            Text('BEM-VINDO AO TIME LOBÃO',
-                textAlign: TextAlign.center, style: AppTextStyles.headlineMedium),
+            const Center(child: BrandWordmark(size: 40)),
+            const SizedBox(height: 24),
+            Text('Bem-vindo ao time',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.voice.copyWith(fontSize: 28)),
             const SizedBox(height: 8),
             Text(
               '$trainer convidou você para acompanhar seus treinos pelo app.',

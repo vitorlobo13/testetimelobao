@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:time_lobao/features/auth/data/repositories/auth_repository.dart';
 import 'package:time_lobao/features/auth/presentation/providers/auth_provider.dart';
 import 'package:time_lobao/main.dart';
+import 'package:time_lobao/shared/widgets/brand_wordmark.dart';
 
 /// Repositório falso: ninguém logado, sem tocar no Firebase.
 class _LoggedOutAuthRepository implements AuthRepository {
@@ -26,12 +27,14 @@ void main() {
       ),
     );
 
-    expect(find.text('TIME LOBÃO'), findsOneWidget);
-    expect(find.text('QUEM ACORDA CEDO BEBE ÁGUA LIMPA'), findsOneWidget);
+    expect(find.byType(BrandWordmark), findsOneWidget);
+    expect(find.text('Mesma essência. Mais força. Mais resultados.'),
+        findsOneWidget);
 
     await tester.pumpAndSettle();
 
     // Sem usuário logado o go_router redireciona para o login.
-    expect(find.text('QUEM ACORDA CEDO BEBE ÁGUA LIMPA'), findsNothing);
+    expect(find.text('Mesma essência. Mais força. Mais resultados.'),
+        findsNothing);
   });
 }

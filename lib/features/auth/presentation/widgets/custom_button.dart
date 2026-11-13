@@ -20,19 +20,28 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.width,
-    this.height = 56,
+    this.height = 52,
   });
+
+  /// Textos escritos em CAIXA ALTA viram "Primeira maiúscula"
+  /// ("PRESCREVER TREINO" → "Prescrever treino"): visual mais adulto.
+  static String sentenceCase(String s) {
+    final letters = s.replaceAll(RegExp(r'[^A-Za-zÀ-ÿ]'), '');
+    if (letters.isEmpty || letters != letters.toUpperCase()) return s;
+    final lower = s.toLowerCase();
+    return lower[0].toUpperCase() + lower.substring(1);
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: width ?? double.infinity,
       height: height,
-      child: _buildButton(),
+      child: _buildButton(sentenceCase(text)),
     );
   }
 
-  Widget _buildButton() {
+  Widget _buildButton(String text) {
     switch (type) {
       case ButtonType.primary:
         return _PrimaryButton(
@@ -81,24 +90,19 @@ class _PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Azul liso da marca (sem degradê nem sombra).
     return Container(
       decoration: BoxDecoration(
-        gradient: onPressed != null
-            ? AppColors.primaryGradient
-            : LinearGradient(
-                colors: [
-                  AppColors.surfaceLight,
-                  AppColors.surfaceLight,
-                ],
-              ),
+        color: onPressed != null ? AppColors.blue : AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: onPressed != null ? AppColors.shadowMedium : [],
       ),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -196,7 +200,7 @@ class _OutlineButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: isLoading ? null : onPressed,
       style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: AppColors.teal, width: 2),
+        side: const BorderSide(color: AppColors.outline, width: 1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),

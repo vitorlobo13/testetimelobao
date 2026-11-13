@@ -446,19 +446,14 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(widget.student == null ? 'Criar Modelo' : 'Criar Treino',
-            style: AppTextStyles.headlineMedium),
+        title: Text(widget.student == null ? 'Novo modelo' : 'Novo treino'),
         actions: [
+          // Ícone (e não texto) para o título caber no celular.
           if (widget.student != null && !_isSaving)
-            TextButton.icon(
+            IconButton(
+              tooltip: 'Usar um modelo',
               onPressed: _showLoadTemplateSheet,
-              icon: const Icon(Icons.folder_open, color: AppColors.teal),
-              label: Text(
-                'Modelos',
-                style: AppTextStyles.buttonMedium.copyWith(
-                  color: AppColors.teal,
-                ),
-              ),
+              icon: const Icon(Icons.folder_open, color: AppColors.blueLight),
             ),
           if (!_isSaving)
             TextButton.icon(
@@ -510,7 +505,7 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
               backgroundColor: AppColors.teal,
               icon: const Icon(Icons.add, color: Colors.white),
               label: Text(
-                'Adicionar Exercício',
+                'Adicionar exercício',
                 style: AppTextStyles.buttonMedium.copyWith(
                   color: Colors.white,
                 ),
@@ -660,10 +655,11 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
   }
 
   Widget _buildDivisionsTabs(WorkoutBuilderState builderState) {
+    // Altura definida pelo conteúdo (antes era fixa em 90 px e espremia os
+    // botões). Pílulas de 44 px em uma linha que rola na horizontal.
     return Container(
-      height: 90,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.only(top: 12, bottom: 12),
+      decoration: const BoxDecoration(
         color: AppColors.background,
         border: Border(
           bottom: BorderSide(color: AppColors.surfaceLight),
@@ -671,18 +667,15 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Divisões do Treino',
-              style: AppTextStyles.labelLarge.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text('Divisões', style: AppTextStyles.labelLarge),
           ),
           const SizedBox(height: 8),
-          Expanded(
+          SizedBox(
+            height: 44,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -704,36 +697,34 @@ class _CreateWorkoutPageState extends ConsumerState<CreateWorkoutPage> {
                         : null,
                   );
                 }),
-                // Botão adicionar divisão
-                GestureDetector(
-                  onTap: _showAddDivisionDialog,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.teal,
-                        width: 2,
-                        style: BorderStyle.solid,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.add,
-                          color: AppColors.teal,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Nova Divisão',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.teal,
-                            fontWeight: FontWeight.bold,
+                // Adicionar divisão
+                Material(
+                  color: Colors.transparent,
+                  shape: const StadiumBorder(
+                    side: BorderSide(color: AppColors.outline),
+                  ),
+                  child: InkWell(
+                    customBorder: const StadiumBorder(),
+                    onTap: _showAddDivisionDialog,
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add,
+                              color: AppColors.blueLight, size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Nova divisão',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.blueLight,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

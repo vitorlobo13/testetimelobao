@@ -193,7 +193,7 @@ class _WorkoutExecutionPageState extends ConsumerState<WorkoutExecutionPage> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Treino finalizado com sucesso! 💪'),
+          content: Text('Treino finalizado. Bom trabalho!'),
           backgroundColor: AppColors.success,
         ),
       );

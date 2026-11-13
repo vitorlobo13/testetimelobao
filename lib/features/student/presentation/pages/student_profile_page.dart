@@ -32,7 +32,9 @@ class StudentProfileState {
     this.isEditing = false,
   });
 
-  double get bmi => weight / ((height / 100) * (height / 100));
+  /// IMC só existe com peso e altura informados (antes dava "NAN").
+  bool get hasBmi => weight > 0 && height > 0;
+  double get bmi => hasBmi ? weight / ((height / 100) * (height / 100)) : 0;
 
   StudentProfileState copyWith({
     double? weight,
@@ -368,7 +370,7 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ÍNDICE DE MASSA CORPORAL (IMC)',
+                        'Índice de massa corporal (IMC)',
                         style: AppTextStyles.bodySmall.copyWith(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -376,18 +378,27 @@ class _StudentProfilePageState extends ConsumerState<StudentProfilePage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        profile.bmi.toStringAsFixed(1),
+                        profile.hasBmi ? profile.bmi.toStringAsFixed(1) : '—',
                         style: AppTextStyles.displayMedium.copyWith(
-                          color: _getBmiColor(profile.bmi),
+                          color: profile.hasBmi
+                              ? _getBmiColor(profile.bmi)
+                              : AppColors.textTertiary,
                           fontSize: 32,
                         ),
                       ),
                     ],
                   ),
-                  Text(
-                    _getBmiClassification(profile.bmi),
-                    style: AppTextStyles.headlineSmall.copyWith(
-                      color: _getBmiColor(profile.bmi),
+                  Flexible(
+                    child: Text(
+                      profile.hasBmi
+                          ? _getBmiClassification(profile.bmi)
+                          : 'Informe peso e altura',
+                      textAlign: TextAlign.right,
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: profile.hasBmi
+                            ? _getBmiColor(profile.bmi)
+                            : AppColors.textTertiary,
+                      ),
                     ),
                   ),
                 ],

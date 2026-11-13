@@ -245,7 +245,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
           const SizedBox(height: 8),
           Center(
-            child: Text('Time Lobão · versão de testes',
+            child: Text('Time Lobo Lopes · versão de testes',
                 style: AppTextStyles.bodySmall
                     .copyWith(color: AppColors.textTertiary)),
           ),

@@ -159,58 +159,62 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
       greeting = 'Boa noite';
     }
 
+    // Barra fixa só com os ícones; a saudação fica no conteúdo, para não
+    // passar por cima dos ícones no celular.
     return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
       pinned: true,
       backgroundColor: AppColors.background,
+      surfaceTintColor: Colors.transparent,
       leading: IconButton(
+        tooltip: 'Menu',
         icon: const Icon(Icons.menu, color: AppColors.textPrimary),
         onPressed: () {
           _scaffoldKey.currentState?.openDrawer();
         },
       ),
-      actions: [
+      actions: const [
         // Atualizações (pendências por aluno) e notificações
-        const TrainerUpdatesButton(),
-        const NotificationBell(),
-        const SizedBox(width: 8),
+        TrainerUpdatesButton(),
+        NotificationBell(),
+        SizedBox(width: 8),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$greeting, $userName! 👋',
-              style: AppTextStyles.headlineMedium.copyWith(fontSize: 18),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              DateFormat('EEEE, d MMMM', 'pt_BR').format(now),
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textTertiary,
-                fontSize: 11,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(76),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _capitalize(DateFormat("EEEE, d 'de' MMMM", 'pt_BR').format(now)),
+                style: AppTextStyles.bodySmall,
               ),
-            ),
-          ],
-        ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.darkTeal.withValues(alpha: 0.1),
-                AppColors.background,
-              ],
-            ),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: '$greeting, ', style: AppTextStyles.voice),
+                    TextSpan(
+                      text: '$userName.',
+                      style: AppTextStyles.voice.copyWith(
+                        color: AppColors.pink,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ]),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
+  static String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
   Widget _buildStatsSection(TrainerDashboardState state) {
     final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -221,23 +225,26 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Visão Geral',
+            'Visão geral',
             style: AppTextStyles.headlineMedium,
           ),
           const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 2,
+          GridView(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.3,
+            // Altura fixa: nada vaza da caixa, no celular ou no computador.
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              mainAxisExtent: 96,
+            ),
             children: [
               StatCard(
-                title: 'Total de Alunos',
+                title: 'Alunos',
                 value: state.totalStudents.toString(),
                 icon: Icons.people,
-                iconColor: AppColors.teal,
+                iconColor: AppColors.blueLight,
                 onTap: () {
                       Navigator.of(context).push(
                       MaterialPageRoute(
@@ -247,7 +254,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 },
               ),
               StatCard(
-                title: 'Alunos Ativos',
+                title: 'Ativos',
                 value: state.activeStudents.toString(),
                 icon: Icons.check_circle,
                 iconColor: AppColors.success,
@@ -256,19 +263,20 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
                 },
               ),
               StatCard(
-                title: 'Pagamentos Pendentes',
+                title: 'Pagamentos pendentes',
                 value: state.pendingPayments.toString(),
-                icon: Icons.warning,
-                iconColor: AppColors.warning,
-                backgroundColor: AppColors.warning.withValues(alpha: 0.1),
+                icon: Icons.schedule,
+                iconColor: AppColors.pink,
+                // Realça (número e borda em rosa) só quando há pendência.
+                backgroundColor:
+                    state.pendingPayments > 0 ? AppColors.pink : null,
                 onTap: _openFinance,
               ),
               StatCard(
-                title: 'Receita Mensal',
+                title: 'Receita prevista/mês',
                 value: currencyFormat.format(state.monthlyRevenue),
                 icon: Icons.attach_money,
                 iconColor: AppColors.success,
-                subtitle: 'Prevista',
                 onTap: _openFinance,
               ),
             ],
@@ -285,12 +293,12 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ações Rápidas',
+            'Ações rápidas',
             style: AppTextStyles.headlineMedium,
           ),
           const SizedBox(height: 16),
           QuickActionCard(
-            title: 'Adicionar Novo Aluno',
+            title: 'Adicionar aluno',
             description: 'Cadastre um novo aluno no sistema',
             icon: Icons.person_add,
             color: AppColors.teal,
@@ -304,7 +312,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
           ),
           const SizedBox(height: 12),
           QuickActionCard(
-            title: 'Criar Novo Treino',
+            title: 'Criar treino',
             description: 'Monte um treino personalizado',
             icon: Icons.fitness_center,
             color: AppColors.success,
@@ -324,7 +332,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
           ),
           const SizedBox(height: 12),
           QuickActionCard(
-            title: 'Registrar Avaliação',
+            title: 'Registrar avaliação',
             description: 'Faça avaliação física de um aluno',
             icon: Icons.assignment,
             color: AppColors.info,
@@ -353,7 +361,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Alunos Recentes',
+                'Alunos recentes',
                 style: AppTextStyles.headlineMedium,
               ),
               TextButton(
@@ -437,7 +445,7 @@ class _TrainerHomePageState extends ConsumerState<TrainerHomePage> {
       backgroundColor: AppColors.teal,
       icon: const Icon(Icons.add, color: Colors.white),
       label: Text(
-        'Novo Aluno',
+        'Novo aluno',
         style: AppTextStyles.buttonMedium.copyWith(
           color: Colors.white,
         ),

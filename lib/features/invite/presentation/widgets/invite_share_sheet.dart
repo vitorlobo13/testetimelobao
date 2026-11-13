@@ -45,7 +45,7 @@ class _InviteShareSheetState extends State<_InviteShareSheet> {
 
   String _message(String url) {
     final firstName = widget.student.name.trim().split(' ').first;
-    return 'Olá, $firstName! Seu acesso ao app do Time Lobão está pronto. '
+    return 'Olá, $firstName! Seu acesso ao app do Time Lobo Lopes está pronto. '
         'Toque no link para criar sua conta e ver seus treinos: $url';
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../shared/widgets/brand_wordmark.dart';
 import 'package:flutter/services.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
@@ -89,35 +90,16 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo Placeholder (substitua por sua logo)
-                      _buildLogoPlaceholder(),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Nome do App
-                      ShaderMask(
-                        shaderCallback: (bounds) => AppColors.primaryGradient
-                            .createShader(bounds),
-                        child: Text(
-                          'TIME LOBÃO',
-                          style: AppTextStyles.displayLarge.copyWith(
-                            fontSize: 56,
-                            letterSpacing: 4,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Slogan
+                      // Marca Time Lobo Lopes (tipográfica até chegar o logo)
+                      const BrandWordmark(size: 58),
+
+                      const SizedBox(height: 20),
+
+                      // Assinatura da marca
                       Text(
-                        'QUEM ACORDA CEDO BEBE ÁGUA LIMPA',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          color: AppColors.textSecondary,
-                          letterSpacing: 2,
-                          fontWeight: FontWeight.w300,
-                        ),
+                        'Mesma essência. Mais força. Mais resultados.',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyMedium,
                       ),
                       
                       const SizedBox(height: 60),

@@ -27,7 +27,7 @@ class QuickActionCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: AppColors.surfaceLight,
             width: 1,
@@ -38,18 +38,16 @@ class QuickActionCard extends StatelessWidget {
             // Ícone
             Container(
               padding: const EdgeInsets.all(12),
+              // Ícone em tom único da marca (sem os quadrados coloridos
+              // de antes, que davam o ar infantil).
               decoration: BoxDecoration(
-                gradient: color != null
-                    ? LinearGradient(
-                        colors: [color!, color!.withValues(alpha: 0.7)],
-                      )
-                    : AppColors.primaryGradient,
+                color: AppColors.blue.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: AppColors.textPrimary,
-                size: 24,
+                color: AppColors.blueLight,
+                size: 22,
               ),
             ),
 

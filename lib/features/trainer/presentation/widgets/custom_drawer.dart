@@ -247,10 +247,10 @@ class CustomDrawer extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+        // Superfície lisa com o traço azul → rosa da marca embaixo.
+        color: AppColors.surface,
+        border: const Border(
+          bottom: BorderSide(color: AppColors.pink, width: 2),
         ),
       ),
       child: Column(

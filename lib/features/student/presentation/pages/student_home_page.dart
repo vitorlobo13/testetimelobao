@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/confirm_logout.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/notifications/notifications.dart';
 import '../widgets/student_evolution_section.dart';
@@ -167,7 +168,7 @@ class _StudentHomePageState extends ConsumerState<StudentHomePage> {
         IconButton(
           tooltip: 'Sair',
           icon: const Icon(Icons.logout, color: AppColors.textPrimary),
-          onPressed: () => ref.read(authProvider.notifier).logout(),
+          onPressed: () => confirmLogout(context, ref),
         ),
       ],
     );

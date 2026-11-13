@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/confirm_logout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -372,47 +373,7 @@ class CustomDrawer extends ConsumerWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        onTap: () async {
-          // Confirmação de logout
-          final shouldLogout = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text(
-                'Sair da Conta',
-                style: AppTextStyles.headlineMedium,
-              ),
-              content: Text(
-                'Tem certeza que deseja sair?',
-                style: AppTextStyles.bodyMedium,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(
-                    'Cancelar',
-                    style: AppTextStyles.buttonMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(
-                    'Sair',
-                    style: AppTextStyles.buttonMedium.copyWith(
-                      color: AppColors.error,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-
-          if (shouldLogout == true && context.mounted) {
-            // O go_router volta para o login quando a sessão termina.
-            await ref.read(authProvider.notifier).logout();
-          }
-        },
+        onTap: () => confirmLogout(context, ref),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/confirm_logout.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/custom_button.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../providers/admin_provider.dart';
@@ -85,7 +85,7 @@ class _AdminHomePageState extends ConsumerState<AdminHomePage> {
           IconButton(
             tooltip: 'Sair',
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
+            onPressed: () => confirmLogout(context, ref),
           ),
         ],
       ),

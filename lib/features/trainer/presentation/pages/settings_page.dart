@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/confirm_logout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -236,10 +237,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   () => showDialog(
                       context: context,
                       builder: (_) => const _ChangePasswordDialog())),
-              _tile(Icons.logout, 'Sair do app', () async {
-                Navigator.of(context).popUntil((r) => r.isFirst);
-                await ref.read(authProvider.notifier).logout();
-              }, color: AppColors.error),
+              _tile(Icons.logout, 'Sair do app',
+                  () => confirmLogout(context, ref),
+                  color: AppColors.error),
             ],
           ),
 
